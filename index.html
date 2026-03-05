@@ -9,6 +9,7 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
         
+    
         body { 
             font-family: 'Inter', sans-serif; 
             background: #f1f5f9; 
@@ -131,6 +132,7 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            width: 100%;
         }
         
         .todo-note-text { 
@@ -280,8 +282,31 @@
             text-transform: uppercase;
             letter-spacing: 0.02em;
         }
+    /* =========================
+REPORT SELECTION STYLE
+=========================*/
+
+.selection-active {
+    border:3px solid #3b82f6 !important;
+    box-shadow:0 0 0 3px rgba(59,130,246,.2);
+}
+
+.report-bar{
+    position:fixed;
+    bottom:0;
+    left:0;
+    right:0;
+    background:#0f172a;
+    color:white;
+    padding:14px;
+    display:none;
+    justify-content:space-between;
+    align-items:center;
+    z-index:999;
+}
     </style>
 </head>
+
 <body>
 
     <!-- Auth Lock Screen -->
@@ -319,7 +344,9 @@
                     <button id="new-job-btn" onclick="openNewJob()" class="bg-blue-600 text-white px-5 py-2 rounded-xl font-black text-xs shadow-lg shadow-blue-900/20 uppercase hidden">NEW JOB</button>
                 </div>
             </div>
-            <div class="relative">
+            
+            <!-- Search Filter: Only Visible when features are unlocked by Admin -->
+            <div class="relative" id="admin-search-container" style="display: none;">
                 <i class="fa-solid fa-search absolute left-4 top-3.5 text-slate-500"></i>
                 <input type="text" id="search" oninput="renderJobs()" placeholder="Search No, Name, Size, GSM, Color..." class="w-full pl-12 p-3.5 rounded-xl text-slate-900 text-sm font-semibold outline-none focus:ring-4 ring-blue-500/20">
             </div>
@@ -327,7 +354,23 @@
 
         <div id="list" class="p-4 max-w-2xl mx-auto pb-24"></div>
     </div>
+<div id="report-bar" class="report-bar">
+    <span id="selected-count" class="font-black text-sm">
+        0 Selected
+    </span>
 
+    <div class="flex gap-2">
+        <button onclick="generateReport()" 
+        class="bg-blue-600 px-4 py-2 rounded-xl font-bold text-xs">
+            Generate Report
+        </button>
+
+        <button onclick="exitSelectionMode()" 
+        class="bg-red-500 px-3 py-2 rounded-xl text-xs">
+            Cancel
+        </button>
+    </div>
+</div>
     <!-- Image Viewer Modal -->
     <div id="image-viewer-modal" onclick="this.style.display='none'">
         <button class="fixed top-5 right-5 text-white text-3xl z-[2001] bg-black/50 w-12 h-12 rounded-full flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
@@ -344,7 +387,7 @@
         </div>
     </div>
 
-    <!-- Security/Access Modal -->
+    <!-- Admin Security/Access Modal -->
     <div id="modal-access" class="modal">
         <div class="modal-content">
             <div class="flex justify-between items-center mb-6">
@@ -373,6 +416,15 @@
                         <input type="checkbox" id="check-prod" class="w-4 h-4 text-blue-600 mr-3 rounded" checked>
                         <span class="text-sm font-bold text-slate-700">Production (+) Log</span>
                     </label>
+                    <label class="flex items-center p-3 bg-slate-50 rounded-xl border-2 border-transparent cursor-pointer hover:border-blue-200 transition-all">
+    <input type="checkbox" id="check-search" class="w-4 h-4 text-blue-600 mr-3 rounded">
+    <span class="text-sm font-bold text-slate-700">Search Filter Access</span>
+</label>
+
+<label class="flex items-center p-3 bg-slate-50 rounded-xl border-2 border-transparent cursor-pointer hover:border-blue-200 transition-all">
+    <input type="checkbox" id="check-copy" class="w-4 h-4 text-blue-600 mr-3 rounded">
+    <span class="text-sm font-bold text-slate-700">Copy To Clipboard</span>
+</label>
                 </div>
                 <div class="flex gap-2">
                     <button onclick="lockAll()" class="flex-1 bg-slate-200 text-slate-600 py-4 rounded-xl font-black mt-2 active:scale-95 uppercase tracking-widest text-xs">LOCK</button>
@@ -501,9 +553,10 @@
                 <button onclick="closeModals()" class="text-slate-400"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
             <div class="bg-slate-50 p-4 rounded-2xl mb-6 border-2 border-slate-100">
+                <input type="hidden" id="sch-edit-index" value="-1">
                 <div class="grid grid-cols-2 gap-2 mb-3">
                     <input type="date" id="sch-date" class="w-full p-2 rounded-xl text-xs font-bold border-2 border-slate-200 outline-none">
-                    <input type="number" id="sch-qty" placeholder="Mtrs" class="w-full p-2 rounded-xl text-xs font-bold border-2 border-slate-200 outline-none">
+                    <input type="number" id="sch-qty" placeholder="Enter Qty" class="w-full p-2 rounded-xl text-xs font-bold border-2 border-slate-200 outline-none">
                 </div>
                 <div class="mb-3">
                     <textarea id="sch-note" placeholder="Schedule Instructions / Notes..." rows="2" class="w-full p-2 rounded-xl text-xs font-bold border-2 border-slate-200 outline-none"></textarea>
@@ -532,11 +585,9 @@
 
     <script>
         const API = "https://script.google.com/macros/s/AKfycbxwVoM6cILilqJsmbKBJwwizZfSwLbMgqHGttITMdz07OZSnwHh-3oqYZHOeffmSKuXXA/exec";
-        const ADMIN_CODE = "4634"; 
+        const ADMIN_CODE = "463478"; 
         const GLOBAL_AUTH_KEY = "global_auth_v3";
         const LOCAL_STORAGE_KEY = 'job_data_v3';
-
-        const FIRST_LEVEL_SECRET = "Access463478!";
         
         let jobs = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '[]');
         let showCompleted = false;
@@ -555,7 +606,7 @@
         };
 
         function checkGlobalAuth() {
-            const val = document.getElementById('global-pass-input').value;
+            const val = document.getElementById('global-pass-input').value.trim();
             if (val === ADMIN_CODE) { 
                 localStorage.setItem(GLOBAL_AUTH_KEY, 'true'); 
                 showApp(); 
@@ -576,6 +627,18 @@
         }
 
         function copyToClipboard(id, el) {
+            // ADMIN CONTROL: Only allow copy if features are unlocked
+            if (!unlockedFeatures.copy) return;
+// ADMIN CONTROLLED COPY FEATURE
+if (!unlockedFeatures.copy) return;
+            
+            /* ===============================
+   REPORT SELECTION SYSTEM
+=================================*/
+
+let selectionMode = false;
+let selectedCards = new Set();
+let pressTimer = null;
             const j = jobs.find(x => x.ID == id);
             if (!j) return;
             const { done, req, pct } = calculateJobStatus(j);
@@ -584,7 +647,7 @@
             let logs = []; try { logs = JSON.parse(j.ProductionLogs || '[]'); } catch(e) {}
             const prodDetail = logs.length > 0 ? logs.map(l => `  • ${l.date}: ${l.meters} Mtrs`).join('\n') : "  No production entries yet.";
             let schedules = []; try { schedules = JSON.parse(j.Schedule || '[]'); } catch(e) {}
-            const schDetail = schedules.length > 0 ? schedules.map(s => `  • ${s.date}: ${formatNum(s.qty)} Mtrs [${s.done ? 'DONE' : 'PENDING'}]${s.note ? '\n    Note: ' + s.note : ''}`).join('\n') : "  No schedule items.";
+            const schDetail = schedules.length > 0 ? schedules.map(s => `  • ${s.date ? s.date : 'ASAP'}: ${s.qty ? formatNum(s.qty) + ' Bags' : '0 Bags'} [${s.done ? 'DONE' : 'PENDING'}]${s.note ? '\n    Note: ' + s.note : ''}`).join('\n') : "  No schedule items.";
             const textToCopy = `📦 JOB MASTER REPORT - #${j.JobNo}\n----------------------------------\n👤 CUSTOMER DETAILS:\n   Name: ${j.Customer}\n   Qty: ${formatNum(j.BagsQty)} Bags\n   Size: ${j.Size || 'N/A'}\n   GSM: ${j.GSM || 'N/A'}\n   Color: ${j.Color || 'N/A'}\n\n🛠️ SPECIFICATIONS:\n   Cut Length: ${j.CutLength} cm\n   Stock: ${formatNum(j.Stock || 0)} Mtrs\n   Printing: ${printType}\n\n📝 OTHER INSTRUCTIONS:\n   ${j.Instructions || "No special instructions."}\n\n📅 DELIVERY SCHEDULE (TO-DO):\n${schDetail}\n\n⚙️ PRODUCTION DETAILS:\n   Total Required: ${formatNum(req)} Mtrs\n   Total Produced: ${formatNum(Math.floor(done))} Mtrs\n   Progress: ${pct}%\n   Remaining: ${formatNum(Math.max(0, req - done))} Mtrs\n${prodDetail}\n\n----------------------------------\nShared via Job Master Pro App`;
             
             const textArea = document.createElement("textarea");
@@ -661,8 +724,16 @@
         }
 
         function lockAll() { 
-            unlockedFeatures = { add: false, todo: false, edit: false, prod: false }; 
+            unlockedFeatures = {
+ add: false,
+ todo: false,
+ edit: false,
+ prod: false,
+ search: false,
+ copy: false
+};
             document.getElementById('new-job-btn').style.display = 'none'; 
+            document.getElementById('admin-search-container').style.display = 'none';
             closeModals(); 
             renderJobs(); 
         }
@@ -673,7 +744,21 @@
                 unlockedFeatures.todo = document.getElementById('check-todo').checked;
                 unlockedFeatures.edit = document.getElementById('check-edit').checked;
                 unlockedFeatures.prod = document.getElementById('check-prod').checked;
+                // NEW ADMIN FEATURES
+unlockedFeatures.search =
+document.getElementById('check-search').checked;
+
+unlockedFeatures.copy =
+document.getElementById('check-copy').checked;
+                
                 document.getElementById('new-job-btn').style.display = unlockedFeatures.add ? 'block' : 'none';
+                // SEARCH ADMIN CONTROL: Only show if admin has unlocked something (indicating admin presence)
+                document.getElementById('admin-search-container').style.display =
+(unlockedFeatures.todo || unlockedFeatures.edit)
+? 'block' : 'none';
+                document.getElementById('admin-search-container').style.display =
+unlockedFeatures.search ? 'block' : 'none';
+                
                 closeModals(); 
                 renderJobs();
             }
@@ -723,13 +808,17 @@
                 let schedules = []; try { schedules = JSON.parse(j.Schedule || '[]'); } catch(e) {}
                 
                 const scheduleHtml = schedules.map(s => {
-                    const formattedDate = new Date(s.date).toLocaleDateString('en-GB', {day:'2-digit', month:'short'});
-                    const bags = formatNum(Math.floor((s.qty/j.CutLength)*100));
+                    const formattedDate = s.date ? new Date(s.date).toLocaleDateString('en-GB', {day:'2-digit', month:'short'}) : '';
+                    // FEATURE: Qty ke saath "Bags" show karna
+                    const displayQty = s.qty ? formatNum(s.qty) + ' Bags' : '';
+                    
+                    if(!formattedDate && !displayQty && !s.note) return '';
+
                     return `
                     <div class="todo-item-inline ${s.done ? 'done' : ''}">
                         <i class="fa-solid ${s.done ? 'fa-circle-check text-emerald-500' : 'fa-circle text-slate-300'} shrink-0"></i>
                         <div class="todo-text-content">
-                            <span>${formattedDate}: ${bags} Bags</span>
+                            <span>${formattedDate ? formattedDate + ': ' : ''}${displayQty}</span>
                             ${s.note ? `<span class="todo-note-text">(${s.note})</span>` : ''}
                         </div>
                     </div>`;
@@ -740,7 +829,10 @@
                 const card = document.createElement('div');
                 card.className = 'job-card';
                 card.id = `job-card-${j.ID}`;
+                
+                // CLIPBOARD ADMIN CONTROL: Double click only works if admin features are active
                 card.setAttribute('ondblclick', `copyToClipboard('${j.ID}', this)`);
+                
                 card.innerHTML = `
                     <div class="copy-toast">COPIED!</div>
                     <div class="flex justify-between items-start gap-3">
@@ -788,6 +880,7 @@
                         </div>
                         <div class="flex justify-between mt-1"><span class="text-[10px] font-bold text-slate-500">${formatNum(Math.floor(done))} / ${formatNum(req)} Mtrs</span></div>
                     </div>`;
+                
                 list.appendChild(card);
             });
             updatePendingBadge();
@@ -815,18 +908,14 @@
             if (icon) icon.classList.remove('sync-anim');
         }
 
-        // Updated Sync Function for better Google Sheet reliability
         async function syncData(action, jobData) {
-            // Save to local storage first so refresh doesn't wipe it
             localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(jobs)); 
             renderJobs();
-            
             try {
                 const params = new URLSearchParams();
                 params.append('action', action);
                 params.append('id', jobData.ID);
                 params.append('data', JSON.stringify(jobData));
-
                 return fetch(API, { 
                     method: 'POST', 
                     mode: 'no-cors', 
@@ -861,7 +950,6 @@
             document.getElementById('color').value = j.Color || '';
             document.getElementById('printing').value = j.Printing || 'plain'; 
             document.getElementById('instructions').value = j.Instructions || '';
-            
             currentJobImageData = j.ImageData || ""; 
             currentJobArtworkData = j.ArtworkData || "";
             document.getElementById('view-sheet-btn').classList.toggle('hidden', !currentJobImageData);
@@ -874,11 +962,7 @@
             const btn = document.getElementById('save-main-btn');
             const label = document.getElementById('save-btn-label');
             const spinner = document.getElementById('save-spinner');
-
-            btn.disabled = true;
-            spinner.classList.remove('hidden');
-            label.innerText = "UPLOADING...";
-
+            btn.disabled = true; spinner.classList.remove('hidden'); label.innerText = "UPLOADING...";
             const id = document.getElementById('edit-id').value || Date.now().toString();
             let j = jobs.find(x => x.ID == id);
             if (!j) { 
@@ -897,13 +981,9 @@
             j.Instructions = document.getElementById('instructions').value;
             j.ImageData = currentJobImageData; 
             j.ArtworkData = currentJobArtworkData;
-            
             await syncData('save', j); 
             closeModals();
-            
-            btn.disabled = false;
-            spinner.classList.add('hidden');
-            label.innerText = "SAVE JOB";
+            btn.disabled = false; spinner.classList.add('hidden'); label.innerText = "SAVE JOB";
         }
 
         function confirmDelete(id) {
@@ -936,18 +1016,12 @@
             const j = jobs.find(x => x.ID == activeId); 
             const list = document.getElementById('prod-history-list');
             let logs = [];
-            try {
-                logs = typeof j.ProductionLogs === 'string' ? JSON.parse(j.ProductionLogs) : (j.ProductionLogs || []);
-            } catch(e) { logs = []; }
-            
+            try { logs = typeof j.ProductionLogs === 'string' ? JSON.parse(j.ProductionLogs) : (j.ProductionLogs || []); } catch(e) { logs = []; }
             const total = logs.reduce((s, l) => s + parseFloat(l.meters || 0), 0);
             document.getElementById('prod-total-display').innerText = `Total: ${formatNum(total)} Mtrs`;
             list.innerHTML = logs.map((l, i) => `
                 <div class="prod-log-item">
-                    <div>
-                        <p class="text-xs font-bold">${l.date}</p>
-                        <p class="text-[10px] text-blue-600">${l.meters} Mtrs</p>
-                    </div>
+                    <div><p class="text-xs font-bold">${l.date}</p><p class="text-[10px] text-blue-600">${l.meters} Mtrs</p></div>
                     <button onclick="deleteLog(${i})" class="text-red-400 p-2"><i class="fa-solid fa-trash"></i></button>
                 </div>`).join('');
         }
@@ -956,18 +1030,14 @@
             const m = document.getElementById('mtr-val').value;
             const d = document.getElementById('mtr-date').value; 
             if (!m || !d) return;
-            
             const btn = document.getElementById('prod-upload-btn');
             btn.disabled = true; document.getElementById('prod-spinner').classList.remove('hidden');
-
             const j = jobs.find(x => x.ID == activeId); 
             let logs = [];
             try { logs = typeof j.ProductionLogs === 'string' ? JSON.parse(j.ProductionLogs) : (j.ProductionLogs || []); } catch(e) {}
             logs.push({ meters: m, date: d }); 
             j.ProductionLogs = JSON.stringify(logs); 
-            
             await syncData('save', j); 
-            
             btn.disabled = false; document.getElementById('prod-spinner').classList.add('hidden');
             document.getElementById('mtr-val').value = '';
             renderProdLogs(); 
@@ -987,41 +1057,58 @@
             activeId = id; 
             const j = jobs.find(x => x.ID == id); 
             document.getElementById('schedule-job-no').innerText = `Job #${j.JobNo}`; 
-            document.getElementById('sch-note').value = '';
+            resetScheduleForm();
             renderSch(); 
             document.getElementById('modal-schedule').style.display = 'flex'; 
         }
         
+        function resetScheduleForm() {
+            document.getElementById('sch-edit-index').value = "-1";
+            document.getElementById('sch-date').value = "";
+            document.getElementById('sch-qty').value = "";
+            document.getElementById('sch-note').value = "";
+            document.getElementById('sch-btn-label').innerText = "ADD TO SCHEDULE";
+        }
+
         function renderSch() {
             const j = jobs.find(x => x.ID == activeId); 
             let items = [];
             try { items = typeof j.Schedule === 'string' ? JSON.parse(j.Schedule) : (j.Schedule || []); } catch(e) {}
-            
-            document.getElementById('schedule-list').innerHTML = items.map((s, i) => `
+            document.getElementById('schedule-list').innerHTML = items.map((s, i) => {
+                const displayDate = s.date ? new Date(s.date).toLocaleDateString('en-GB', {day:'2-digit', month:'short', year:'numeric'}) : '';
+                return `
                 <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 shadow-sm">
                     <div class="flex justify-between items-start">
                         <div class="${s.done ? 'opacity-40 line-through' : ''} flex-1">
-                            <p class="text-xs font-black text-slate-800">${new Date(s.date).toLocaleDateString('en-GB', {day:'2-digit', month:'short', year:'numeric'})}</p>
-                            <p class="text-sm font-black text-blue-600">${formatNum(s.qty)} Mtrs</p>
+                            ${displayDate ? `<p class="text-xs font-black text-slate-800">${displayDate}</p>` : ''}
+                            <p class="text-sm font-black text-blue-600">${s.qty ? formatNum(s.qty) + ' Bags' : 'No Qty'}</p>
                             ${s.note ? `<p class="text-[10px] font-bold text-slate-500 mt-1 leading-tight">${s.note}</p>` : ''}
                         </div>
                         <div class="flex flex-col gap-2 ml-4">
-                            <button onclick="toggleSch(${i})" class="w-8 h-8 rounded-xl ${s.done ? 'bg-emerald-500 text-white' : 'bg-white border-2 border-slate-200 text-slate-400'} flex items-center justify-center transition-colors">
-                                <i class="fa-solid fa-check"></i>
-                            </button>
-                            <button onclick="delSch(${i})" class="w-8 h-8 rounded-xl bg-red-50 text-red-400 flex items-center justify-center">
+                            <div class="flex gap-1">
+                                <button onclick="editSch(${i})" class="w-8 h-8 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center transition-colors">
+                                    <i class="fa-solid fa-pen-to-square text-xs"></i>
+                                </button>
+                                <button onclick="toggleSch(${i})" class="w-8 h-8 rounded-xl ${s.done ? 'bg-emerald-500 text-white' : 'bg-white border-2 border-slate-200 text-slate-400'} flex items-center justify-center transition-colors">
+                                    <i class="fa-solid fa-check"></i>
+                                </button>
+                            </div>
+                            <button onclick="delSch(${i})" class="w-full h-8 rounded-xl bg-red-50 text-red-400 flex items-center justify-center">
                                 <i class="fa-solid fa-trash text-xs"></i>
                             </button>
                         </div>
                     </div>
-                </div>`).join('');
+                </div>`;
+            }).join('');
         }
         
         async function addScheduleItem() { 
             const d = document.getElementById('sch-date').value;
             const q = document.getElementById('sch-qty').value;
-            const n = document.getElementById('sch-note').value; 
-            if(!d || !q) return; 
+            const n = document.getElementById('sch-note').value;
+            const editIndex = parseInt(document.getElementById('sch-edit-index').value);
+            
+            if(!d && !q && !n) return; 
 
             const btn = document.getElementById('sch-upload-btn');
             btn.disabled = true; document.getElementById('sch-spinner').classList.remove('hidden');
@@ -1029,17 +1116,37 @@
             const j = jobs.find(x => x.ID == activeId); 
             let items = [];
             try { items = typeof j.Schedule === 'string' ? JSON.parse(j.Schedule) : (j.Schedule || []); } catch(e) {}
-            items.push({ date: d, qty: q, note: n, done: false }); 
-            j.Schedule = JSON.stringify(items); 
+            
+            const newItem = { date: d, qty: q, note: n, done: editIndex > -1 ? items[editIndex].done : false };
 
+            if(editIndex > -1) {
+                items[editIndex] = newItem;
+            } else {
+                items.push(newItem);
+            }
+            
+            j.Schedule = JSON.stringify(items); 
             await syncData('save', j); 
 
             btn.disabled = false; document.getElementById('sch-spinner').classList.add('hidden');
-            document.getElementById('sch-qty').value = '';
-            document.getElementById('sch-note').value = '';
+            resetScheduleForm();
             renderSch(); 
         }
         
+        function editSch(i) {
+            const j = jobs.find(x => x.ID == activeId); 
+            let items = [];
+            try { items = typeof j.Schedule === 'string' ? JSON.parse(j.Schedule) : (j.Schedule || []); } catch(e) {}
+            const item = items[i];
+            
+            document.getElementById('sch-edit-index').value = i;
+            document.getElementById('sch-date').value = item.date || "";
+            document.getElementById('sch-qty').value = item.qty || "";
+            document.getElementById('sch-note').value = item.note || "";
+            document.getElementById('sch-btn-label').innerText = "UPDATE SCHEDULE";
+            document.getElementById('sch-date').focus();
+        }
+
         async function toggleSch(i) { 
             const j = jobs.find(x => x.ID == activeId); 
             let items = [];
