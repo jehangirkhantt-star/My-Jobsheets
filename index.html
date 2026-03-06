@@ -17,7 +17,7 @@
             -webkit-tap-highlight-color: transparent;
         }
         
-        #global-auth-overlay {
+        #global-auth-overlay, #waiting-overlay {
             position: fixed;
             inset: 0;
             background: #0f172a;
@@ -26,6 +26,7 @@
             align-items: center;
             justify-content: center;
             padding: 20px;
+            flex-direction: column;
         }
 
         .auth-card {
@@ -277,37 +278,40 @@
         .remaining-badge {
             font-size: 10px;
             font-weight: 800;
-            color: #dc2626;
+            color: #6b7280; 
             padding: 3px 0;
             text-transform: uppercase;
             letter-spacing: 0.02em;
         }
-    /* =========================
-REPORT SELECTION STYLE
-=========================*/
 
-.selection-active {
-    border:3px solid #3b82f6 !important;
-    box-shadow:0 0 0 3px rgba(59,130,246,.2);
-}
+        .selection-active {
+            border:3px solid #3b82f6 !important;
+            box-shadow:0 0 0 3px rgba(59,130,246,.2);
+        }
 
-.report-bar{
-    position:fixed;
-    bottom:0;
-    left:0;
-    right:0;
-    background:#0f172a;
-    color:white;
-    padding:14px;
-    display:none;
-    justify-content:space-between;
-    align-items:center;
-    z-index:999;
-}
+        .report-bar{
+            position:fixed;
+            bottom:0;
+            left:0;
+            right:0;
+            background:#0f172a;
+            color:white;
+            padding:14px;
+            display:none;
+            justify-content:space-between;
+            align-items:center;
+            z-index:999;
+        }
     </style>
 </head>
 
 <body>
+
+    <!-- Action Toast Notification (Success/Disallow Messages) -->
+    <div id="action-toast" class="fixed top-10 left-1/2 transform -translate-x-1/2 bg-emerald-500 text-white px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-2xl z-[9999] transition-all duration-300 opacity-0 pointer-events-none translate-y-[-20px] flex items-center gap-2">
+        <span id="action-toast-icon"><i class="fa-solid fa-circle-check"></i></span>
+        <span id="action-toast-msg">Success</span>
+    </div>
 
     <!-- Auth Lock Screen -->
     <div id="global-auth-overlay">
@@ -322,6 +326,13 @@ REPORT SELECTION STYLE
             <p id="auth-error-msg" class="text-red-500 text-[10px] font-bold mt-4 uppercase hidden">Incorrect code. Please try again.</p>
         </div>
     </div>
+    
+    <!-- Waiting / Approval Overlay for Users -->
+    <div id="waiting-overlay" style="display:none;">
+        <i class="fa-solid fa-hourglass-half text-blue-500 text-6xl mb-6 sync-anim"></i>
+        <h2 class="text-2xl font-black text-white mb-2 uppercase tracking-tighter text-center">Waiting for Approval</h2>
+        <p class="text-slate-400 text-xs font-bold text-center max-w-xs leading-relaxed">Your device request has been sent successfully. Please ask the Admin to approve your request to gain access.</p>
+    </div>
 
     <!-- Main Content -->
     <div id="main-app-content" style="display: none;">
@@ -332,13 +343,20 @@ REPORT SELECTION STYLE
                     <p class="text-[10px] font-bold text-slate-400 tracking-widest uppercase">Production Management</p>
                 </div>
                 <div class="flex gap-2">
-                    <button id="toggle-complete-btn" title="Toggle Show/Hide" onclick="toggleCompleted()" ondblclick="openAccess()" class="bg-slate-800 p-2.5 rounded-xl active:scale-90 border border-slate-700 text-slate-400 transition-colors">
-                        <i id="eye-icon" class="fa-solid fa-eye-slash"></i>
-                    </button>
                     <div class="relative">
-                        <button id="sync-icon-btn" title="Sync Data" onclick="pullData()" class="bg-slate-800 p-2.5 rounded-xl active:scale-90 border border-slate-700">
+                        <!-- Eye Icon -->
+                        <button id="toggle-complete-btn" title="Toggle Show/Hide" onclick="toggleCompleted()" ondblclick="handleEyeDoubleClick()" class="bg-slate-800 p-2.5 rounded-xl active:scale-90 border border-slate-700 text-slate-400 transition-colors relative">
+                            <i id="eye-icon" class="fa-solid fa-eye-slash"></i>
+                        </button>
+                        <!-- Admin Notification Badge -->
+                        <div id="admin-req-badge" class="badge-pulse hidden">0</div>
+                    </div>
+                    <div class="relative">
+                        <!-- Refresh Icon -->
+                        <button id="sync-icon-btn" title="Sync Data" onclick="pullData()" class="bg-slate-800 p-2.5 rounded-xl active:scale-90 border border-slate-700 relative">
                             <i id="sync-icon" class="fa-solid fa-rotate text-blue-400"></i>
                         </button>
+                        <!-- Pending Jobs Badge -->
                         <div id="pending-badge" class="badge-pulse hidden">0</div>
                     </div>
                     <button id="new-job-btn" onclick="openNewJob()" class="bg-blue-600 text-white px-5 py-2 rounded-xl font-black text-xs shadow-lg shadow-blue-900/20 uppercase hidden">NEW JOB</button>
@@ -354,23 +372,24 @@ REPORT SELECTION STYLE
 
         <div id="list" class="p-4 max-w-2xl mx-auto pb-24"></div>
     </div>
-<div id="report-bar" class="report-bar">
-    <span id="selected-count" class="font-black text-sm">
-        0 Selected
-    </span>
+    <div id="report-bar" class="report-bar">
+        <span id="selected-count" class="font-black text-sm">
+            0 Selected
+        </span>
 
-    <div class="flex gap-2">
-        <button onclick="generateReport()" 
-        class="bg-blue-600 px-4 py-2 rounded-xl font-bold text-xs">
-            Generate Report
-        </button>
+        <div class="flex gap-2">
+            <button onclick="generateReport()" 
+            class="bg-blue-600 px-4 py-2 rounded-xl font-bold text-xs">
+                Generate Report
+            </button>
 
-        <button onclick="exitSelectionMode()" 
-        class="bg-red-500 px-3 py-2 rounded-xl text-xs">
-            Cancel
-        </button>
+            <button onclick="exitSelectionMode()" 
+            class="bg-red-500 px-3 py-2 rounded-xl text-xs">
+                Cancel
+            </button>
+        </div>
     </div>
-</div>
+    
     <!-- Image Viewer Modal -->
     <div id="image-viewer-modal" onclick="this.style.display='none'">
         <button class="fixed top-5 right-5 text-white text-3xl z-[2001] bg-black/50 w-12 h-12 rounded-full flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
@@ -395,11 +414,14 @@ REPORT SELECTION STYLE
                 <button onclick="closeModals()" class="text-slate-400"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
             <div class="space-y-4">
-                <div class="space-y-1">
+                <div class="space-y-1" id="inner-security-wrap" style="display:none;">
                     <label class="text-[10px] font-black text-slate-500 uppercase ml-1">Security Code</label>
                     <input type="password" id="access-code" placeholder="Enter Secret Code" class="w-full bg-slate-50 border-slate-200 border-2 p-3 rounded-xl text-sm font-bold outline-none focus:border-blue-500">
                 </div>
-                <div class="grid grid-cols-1 gap-2 mt-2">
+                
+                <!-- Hidden Checkboxes from main Admin Control -->
+                <h4 class="hidden text-xs font-black text-slate-500 uppercase mt-4">Default Permissions (New Users)</h4>
+                <div class="hidden grid-cols-1 gap-2 mt-2">
                     <label class="flex items-center p-3 bg-slate-50 rounded-xl border-2 border-transparent cursor-pointer hover:border-blue-200 transition-all">
                         <input type="checkbox" id="check-add" class="w-4 h-4 text-blue-600 mr-3 rounded" checked>
                         <span class="text-sm font-bold text-slate-700">Add New Jobs</span>
@@ -417,20 +439,64 @@ REPORT SELECTION STYLE
                         <span class="text-sm font-bold text-slate-700">Production (+) Log</span>
                     </label>
                     <label class="flex items-center p-3 bg-slate-50 rounded-xl border-2 border-transparent cursor-pointer hover:border-blue-200 transition-all">
-    <input type="checkbox" id="check-search" class="w-4 h-4 text-blue-600 mr-3 rounded">
-    <span class="text-sm font-bold text-slate-700">Search Filter Access</span>
-</label>
-
-<label class="flex items-center p-3 bg-slate-50 rounded-xl border-2 border-transparent cursor-pointer hover:border-blue-200 transition-all">
-    <input type="checkbox" id="check-copy" class="w-4 h-4 text-blue-600 mr-3 rounded">
-    <span class="text-sm font-bold text-slate-700">Copy To Clipboard</span>
-</label>
+                        <input type="checkbox" id="check-search" class="w-4 h-4 text-blue-600 mr-3 rounded">
+                        <span class="text-sm font-bold text-slate-700">Search Filter Access</span>
+                    </label>
+                    <label class="flex items-center p-3 bg-slate-50 rounded-xl border-2 border-transparent cursor-pointer hover:border-blue-200 transition-all">
+                        <input type="checkbox" id="check-copy" class="w-4 h-4 text-blue-600 mr-3 rounded">
+                        <span class="text-sm font-bold text-slate-700">Copy To Clipboard</span>
+                    </label>
                 </div>
-                <div class="flex gap-2">
-                    <button onclick="lockAll()" class="flex-1 bg-slate-200 text-slate-600 py-4 rounded-xl font-black mt-2 active:scale-95 uppercase tracking-widest text-xs">LOCK</button>
-                    <button onclick="validateAccess()" class="flex-[2] bg-slate-900 text-white py-4 rounded-xl font-black mt-2 shadow-xl active:scale-95 uppercase tracking-widest text-xs">UNLOCK</button>
+                
+                <!-- Admin Requests Section showing Allowed Users and Pending requests -->
+                <div id="admin-requests-section" class="mt-2 border-slate-200 pt-2">
+                    <h4 class="text-xs font-black text-slate-500 uppercase mb-3">User Access Manager</h4>
+                    <div id="requests-list" class="space-y-2 max-h-[250px] overflow-y-auto pr-1"></div>
+                </div>
+
+                <div class="flex gap-2 pt-2">
+                    <button onclick="lockAll()" class="flex-1 bg-slate-200 text-slate-600 py-4 rounded-xl font-black mt-2 active:scale-95 uppercase tracking-widest text-xs hidden">LOCK</button>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- NEW MODAL: User Specific Permissions (ON FEATURE) -->
+    <div id="modal-user-permissions" class="modal z-[1100]">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="font-black text-xl text-slate-800">User Features</h3>
+                <button onclick="closeUserPermsModal()" class="text-slate-400"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <p id="editing-user-id" class="text-[10px] font-bold text-blue-600 uppercase mb-4 border-b border-slate-100 pb-2"></p>
+            
+            <div class="grid grid-cols-1 gap-2 mt-2">
+                <label class="flex items-center p-3 bg-slate-50 rounded-xl border-2 border-transparent cursor-pointer hover:border-blue-200 transition-all">
+                    <input type="checkbox" id="u-check-add" class="w-4 h-4 text-indigo-600 mr-3 rounded">
+                    <span class="text-sm font-bold text-slate-700">Add New Jobs</span>
+                </label>
+                <label class="flex items-center p-3 bg-slate-50 rounded-xl border-2 border-transparent cursor-pointer hover:border-blue-200 transition-all">
+                    <input type="checkbox" id="u-check-todo" class="w-4 h-4 text-indigo-600 mr-3 rounded">
+                    <span class="text-sm font-bold text-slate-700">Delivery Schedule</span>
+                </label>
+                <label class="flex items-center p-3 bg-slate-50 rounded-xl border-2 border-transparent cursor-pointer hover:border-blue-200 transition-all">
+                    <input type="checkbox" id="u-check-edit" class="w-4 h-4 text-indigo-600 mr-3 rounded">
+                    <span class="text-sm font-bold text-slate-700">Edit & Delete</span>
+                </label>
+                <label class="flex items-center p-3 bg-slate-50 rounded-xl border-2 border-transparent cursor-pointer hover:border-blue-200 transition-all">
+                    <input type="checkbox" id="u-check-prod" class="w-4 h-4 text-indigo-600 mr-3 rounded">
+                    <span class="text-sm font-bold text-slate-700">Production (+) Log</span>
+                </label>
+                <label class="flex items-center p-3 bg-slate-50 rounded-xl border-2 border-transparent cursor-pointer hover:border-blue-200 transition-all">
+                    <input type="checkbox" id="u-check-search" class="w-4 h-4 text-indigo-600 mr-3 rounded">
+                    <span class="text-sm font-bold text-slate-700">Search Filter Access</span>
+                </label>
+                <label class="flex items-center p-3 bg-slate-50 rounded-xl border-2 border-transparent cursor-pointer hover:border-blue-200 transition-all">
+                    <input type="checkbox" id="u-check-copy" class="w-4 h-4 text-indigo-600 mr-3 rounded">
+                    <span class="text-sm font-bold text-slate-700">Copy To Clipboard</span>
+                </label>
+            </div>
+            <button onclick="saveUserPermissions()" class="w-full bg-indigo-600 text-white py-4 rounded-xl font-black mt-4 shadow-xl shadow-indigo-500/30 active:scale-95 uppercase tracking-widest text-xs">ALLOW FEATURE</button>
         </div>
     </div>
 
@@ -585,8 +651,10 @@ REPORT SELECTION STYLE
 
     <script>
         const API = "https://script.google.com/macros/s/AKfycbxwVoM6cILilqJsmbKBJwwizZfSwLbMgqHGttITMdz07OZSnwHh-3oqYZHOeffmSKuXXA/exec";
-        const ADMIN_CODE = "463478"; 
-        const GLOBAL_AUTH_KEY = "global_auth_v3";
+        
+        const APP_LOCK_CODE = "4634"; 
+        const ADMIN_CODE = "4634-78"; 
+        
         const LOCAL_STORAGE_KEY = 'job_data_v3';
         
         let jobs = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '[]');
@@ -594,32 +662,285 @@ REPORT SELECTION STYLE
         let activeId = null;
         let currentJobImageData = ""; 
         let currentJobArtworkData = ""; 
-        let unlockedFeatures = { add: false, todo: false, edit: false, prod: false };
+        
+        let unlockedFeatures = { add: false, todo: false, edit: false, prod: false, search: false, copy: false };
+        let pollingInterval = null;
+        let editingUserId = null; 
+
+        // TOAST NOTIFICATION FUNCTION
+        function showActionToast(msg, isError = false) {
+            const toast = document.getElementById('action-toast');
+            const icon = document.getElementById('action-toast-icon');
+            
+            if(isError) {
+                toast.classList.replace('bg-emerald-500', 'bg-red-500');
+                icon.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i>`;
+            } else {
+                toast.classList.replace('bg-red-500', 'bg-emerald-500');
+                icon.innerHTML = `<i class="fa-solid fa-circle-check"></i>`;
+            }
+            document.getElementById('action-toast-msg').innerText = msg;
+            
+            toast.classList.remove('opacity-0', 'translate-y-[-20px]');
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-[-20px]');
+            }, 3000);
+        }
 
         window.onload = () => {
-            const isAuth = localStorage.getItem(GLOBAL_AUTH_KEY);
-            if (isAuth === 'true') { 
+            const role = localStorage.getItem('userRole');
+            if (role === 'admin') { 
                 showApp(); 
+            } else if (role === 'user_approved') {
+                showApp();
+            } else if (role === 'user_pending') {
+                startApprovalPolling();
             } else { 
                 document.getElementById('global-auth-overlay').style.display = 'flex'; 
             }
         };
 
+        function getDeviceId() {
+            let id = localStorage.getItem('app_device_id');
+            if (!id) {
+                id = 'USER_' + Math.floor(Math.random() * 90000 + 10000); 
+                localStorage.setItem('app_device_id', id);
+            }
+            return id;
+        }
+
+        function getSystemSettings() {
+            let sys = jobs.find(x => x.ID === 'SYSTEM_SETTINGS_V1');
+            try {
+                return sys ? JSON.parse(sys.Instructions) : { requests: [], permissions: { add: false, todo: false, edit: false, prod: false, search: false, copy: false } };
+            } catch(e) {
+                return { requests: [], permissions: { add: false, todo: false, edit: false, prod: false, search: false, copy: false } };
+            }
+        }
+
+        async function saveSystemSettings(settings) {
+            let sys = jobs.find(x => x.ID === 'SYSTEM_SETTINGS_V1');
+            if (!sys) {
+                sys = { ID: 'SYSTEM_SETTINGS_V1', JobNo: 'SYS_000', Customer: 'APP_SETTINGS' };
+                jobs.push(sys);
+            }
+            sys.Instructions = JSON.stringify(settings);
+            await syncData('save', sys);
+        }
+
+        function updateLocalPermissions() {
+            if (localStorage.getItem('userRole') !== 'admin') {
+                let set = getSystemSettings();
+                let myDevId = getDeviceId();
+                let myReq = set.requests.find(r => r.id === myDevId);
+                
+                if (myReq && myReq.permissions) {
+                    unlockedFeatures = myReq.permissions;
+                } else {
+                    unlockedFeatures = set.permissions;
+                }
+                
+                if (localStorage.getItem('userRole') === 'user_approved') {
+                    if (!myReq || myReq.status !== 'approved') {
+                        localStorage.removeItem('userRole');
+                        document.getElementById('main-app-content').style.display = 'none';
+                        document.getElementById('global-auth-overlay').style.display = 'flex';
+                        
+                        const errMsg = document.getElementById('auth-error-msg');
+                        errMsg.innerText = "Access has been revoked by Admin.";
+                        errMsg.classList.remove('hidden');
+                    }
+                }
+            }
+        }
+
         function checkGlobalAuth() {
             const val = document.getElementById('global-pass-input').value.trim();
+            document.getElementById('auth-error-msg').classList.add('hidden');
+            
             if (val === ADMIN_CODE) { 
-                localStorage.setItem(GLOBAL_AUTH_KEY, 'true'); 
+                localStorage.setItem('userRole', 'admin'); 
                 showApp(); 
+            } else if (val === APP_LOCK_CODE) {
+                localStorage.setItem('userRole', 'user_pending');
+                startApprovalPolling();
             } else { 
+                document.getElementById('auth-error-msg').innerText = "Incorrect code. Please try again.";
                 document.getElementById('auth-error-msg').classList.remove('hidden'); 
+            }
+        }
+
+        async function startApprovalPolling() {
+            document.getElementById('global-auth-overlay').style.display = 'none';
+            document.getElementById('waiting-overlay').style.display = 'flex';
+            
+            await silentPullData();
+            
+            let set = getSystemSettings();
+            let devId = getDeviceId();
+            let existingReq = set.requests.find(r => r.id === devId);
+            
+            if (!existingReq || existingReq.status !== 'approved') {
+                if (existingReq) {
+                    set.requests = set.requests.filter(r => r.id !== devId);
+                }
+                
+                set.requests.push({ id: devId, status: 'pending', time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) });
+                await saveSystemSettings(set);
+                
+                pollingInterval = setInterval(async () => {
+                    await silentPullData();
+                    let latestSet = getSystemSettings();
+                    let myReq = latestSet.requests.find(r => r.id === getDeviceId());
+                    if (myReq && myReq.status === 'approved') {
+                        clearInterval(pollingInterval);
+                        localStorage.setItem('userRole', 'user_approved');
+                        document.getElementById('waiting-overlay').style.display = 'none';
+                        showApp();
+                    }
+                }, 5000);
+            } else if (existingReq && existingReq.status === 'approved') {
+                localStorage.setItem('userRole', 'user_approved');
+                document.getElementById('waiting-overlay').style.display = 'none';
+                showApp();
             }
         }
 
         function showApp() {
             document.getElementById('global-auth-overlay').style.display = 'none';
+            document.getElementById('waiting-overlay').style.display = 'none';
             document.getElementById('main-app-content').style.display = 'block';
+            
+            updateLocalPermissions();
             renderJobs(); 
-            pullData();
+            pullData(); 
+            
+            if(!window.liveSyncInterval) {
+                window.liveSyncInterval = setInterval(() => {
+                    silentPullData().then(() => {
+                        updateLocalPermissions();
+                        renderJobs();
+                    });
+                }, 10000);
+            }
+        }
+
+        function handleEyeDoubleClick() {
+            if (localStorage.getItem('userRole') === 'admin') {
+                let set = getSystemSettings();
+                renderAdminRequestsList(set);
+                document.getElementById('modal-access').style.display = 'flex'; 
+            }
+        }
+        
+        function renderAdminRequestsList(set) {
+            const list = document.getElementById('requests-list');
+            const visibleReqs = set.requests.filter(r => r.status === 'pending' || r.status === 'approved');
+            
+            if(visibleReqs.length === 0) {
+                list.innerHTML = `<p class="text-[10px] text-slate-400 font-bold uppercase py-2">No users or requests.</p>`;
+            } else {
+                list.innerHTML = visibleReqs.map(r => `
+                    <div class="flex justify-between items-center bg-white p-3 rounded-xl border border-slate-200 mb-2 gap-2">
+                        <span class="text-xs font-black text-slate-700 truncate flex-1">${r.id} <span class="block text-[9px] ${r.status === 'approved' ? 'text-emerald-500' : 'text-amber-500'} font-bold mt-0.5">${r.status.toUpperCase()} - ${r.time}</span></span>
+                        ${r.status === 'pending' ? 
+                        `<button type="button" onclick="approveUserAccess('${r.id}')" class="bg-blue-600 text-white h-8 px-4 rounded-lg text-[10px] font-black tracking-widest uppercase shadow active:scale-95 shrink-0 flex items-center justify-center">ALLOW</button>` :
+                        `<!-- Aligned Buttons for ON FEATURE & DISALLOW -->
+                        <div class="flex gap-1.5 shrink-0 items-center h-8">
+                            <button type="button" onclick="openUserFeatures('${r.id}')" class="h-full bg-indigo-500 text-white px-3 rounded-lg text-[9px] font-black tracking-widest uppercase shadow active:scale-95 flex items-center gap-1.5" title="User Features"><i class="fa-solid fa-sliders"></i> ON FEATURE</button>
+                            <button type="button" onclick="disallowUserAccess('${r.id}')" class="h-full w-8 bg-red-500 text-white rounded-lg text-xs shadow active:scale-95 flex items-center justify-center" title="Block User"><i class="fa-solid fa-ban"></i></button>
+                        </div>`
+                        }
+                    </div>
+                `).join('');
+            }
+        }
+
+        async function approveUserAccess(id) {
+            let set = getSystemSettings();
+            let req = set.requests.find(r => r.id === id);
+            if (req) {
+                req.status = 'approved';
+                if (!req.permissions) {
+                    req.permissions = JSON.parse(JSON.stringify(set.permissions));
+                }
+                
+                // INSTANT UI UPDATE
+                renderAdminRequestsList(set);
+                renderJobs(); 
+                showActionToast("User Allowed Successfully!");
+                
+                try {
+                    await saveSystemSettings(set);
+                } catch(e) { console.error(e); }
+            }
+        }
+
+        async function disallowUserAccess(id) {
+            let set = getSystemSettings();
+            let req = set.requests.find(r => r.id === id);
+            if (req) {
+                req.status = 'revoked';
+                
+                // INSTANT UI UPDATE
+                renderAdminRequestsList(set);
+                renderJobs(); 
+                showActionToast("User Disallowed Successfully!", true);
+                
+                try {
+                    await saveSystemSettings(set);
+                } catch(e) { console.error(e); }
+            }
+        }
+        
+        function openUserFeatures(userId) {
+            editingUserId = userId;
+            document.getElementById('editing-user-id').innerText = "Settings for: " + userId;
+            
+            let set = getSystemSettings();
+            let req = set.requests.find(r => r.id === userId);
+            
+            let perms = req.permissions || { add: false, todo: false, edit: false, prod: false, search: false, copy: false };
+
+            document.getElementById('u-check-add').checked = perms.add;
+            document.getElementById('u-check-todo').checked = perms.todo;
+            document.getElementById('u-check-edit').checked = perms.edit;
+            document.getElementById('u-check-prod').checked = perms.prod;
+            document.getElementById('u-check-search').checked = perms.search;
+            document.getElementById('u-check-copy').checked = perms.copy;
+
+            document.getElementById('modal-user-permissions').style.display = 'flex';
+        }
+
+        function closeUserPermsModal() {
+            document.getElementById('modal-user-permissions').style.display = 'none';
+            editingUserId = null;
+        }
+
+        async function saveUserPermissions() {
+            if (!editingUserId) return;
+            
+            let set = getSystemSettings();
+            let req = set.requests.find(r => r.id === editingUserId);
+            
+            if (req) {
+                req.permissions = {
+                    add: document.getElementById('u-check-add').checked,
+                    todo: document.getElementById('u-check-todo').checked,
+                    edit: document.getElementById('u-check-edit').checked,
+                    prod: document.getElementById('u-check-prod').checked,
+                    search: document.getElementById('u-check-search').checked,
+                    copy: document.getElementById('u-check-copy').checked
+                };
+                
+                // INSTANT UI UPDATE (Hide Modal Immediately)
+                closeUserPermsModal();
+                showActionToast("Features Allowed Successfully!");
+                
+                try {
+                    await saveSystemSettings(set);
+                } catch(e) { console.error(e); }
+            }
         }
 
         function formatNum(num) { 
@@ -627,18 +948,9 @@ REPORT SELECTION STYLE
         }
 
         function copyToClipboard(id, el) {
-            // ADMIN CONTROL: Only allow copy if features are unlocked
-            if (!unlockedFeatures.copy) return;
-// ADMIN CONTROLLED COPY FEATURE
-if (!unlockedFeatures.copy) return;
+            const isAdmin = localStorage.getItem('userRole') === 'admin';
+            if (!isAdmin && !unlockedFeatures.copy) return;
             
-            /* ===============================
-   REPORT SELECTION SYSTEM
-=================================*/
-
-let selectionMode = false;
-let selectedCards = new Set();
-let pressTimer = null;
             const j = jobs.find(x => x.ID == id);
             if (!j) return;
             const { done, req, pct } = calculateJobStatus(j);
@@ -718,52 +1030,6 @@ let pressTimer = null;
             modal.scrollTo(0,0);
         }
 
-        function openAccess() { 
-            document.getElementById('access-code').value = ''; 
-            document.getElementById('modal-access').style.display = 'flex'; 
-        }
-
-        function lockAll() { 
-            unlockedFeatures = {
- add: false,
- todo: false,
- edit: false,
- prod: false,
- search: false,
- copy: false
-};
-            document.getElementById('new-job-btn').style.display = 'none'; 
-            document.getElementById('admin-search-container').style.display = 'none';
-            closeModals(); 
-            renderJobs(); 
-        }
-        
-        function validateAccess() {
-            if (document.getElementById('access-code').value === ADMIN_CODE) {
-                unlockedFeatures.add = document.getElementById('check-add').checked;
-                unlockedFeatures.todo = document.getElementById('check-todo').checked;
-                unlockedFeatures.edit = document.getElementById('check-edit').checked;
-                unlockedFeatures.prod = document.getElementById('check-prod').checked;
-                // NEW ADMIN FEATURES
-unlockedFeatures.search =
-document.getElementById('check-search').checked;
-
-unlockedFeatures.copy =
-document.getElementById('check-copy').checked;
-                
-                document.getElementById('new-job-btn').style.display = unlockedFeatures.add ? 'block' : 'none';
-                // SEARCH ADMIN CONTROL: Only show if admin has unlocked something (indicating admin presence)
-                document.getElementById('admin-search-container').style.display =
-(unlockedFeatures.todo || unlockedFeatures.edit)
-? 'block' : 'none';
-                document.getElementById('admin-search-container').style.display =
-unlockedFeatures.search ? 'block' : 'none';
-                
-                closeModals(); 
-                renderJobs();
-            }
-        }
-
         function toggleCompleted() {
             showCompleted = !showCompleted;
             const btn = document.getElementById('toggle-complete-btn'), icon = document.getElementById('eye-icon');
@@ -792,9 +1058,33 @@ unlockedFeatures.search ? 'block' : 'none';
             if (!list) return;
             list.innerHTML = '';
             
+            const isAdmin = localStorage.getItem('userRole') === 'admin';
+            
+            const renderFeatures = isAdmin ? { add: true, todo: true, edit: true, prod: true, search: true, copy: true } : unlockedFeatures;
+            
+            document.getElementById('admin-search-container').style.display = renderFeatures.search ? 'block' : 'none';
+            document.getElementById('new-job-btn').style.display = renderFeatures.add ? 'block' : 'none';
+
+            // Fixed Admin Eye Icon Notification Badge Logic
+            if (isAdmin) {
+                let set = getSystemSettings();
+                let pendingCount = set.requests.filter(r => r.status === 'pending').length;
+                const reqBadge = document.getElementById('admin-req-badge');
+                if (reqBadge) {
+                    reqBadge.innerText = pendingCount;
+                    if(pendingCount > 0) {
+                        reqBadge.classList.remove('hidden');
+                    } else {
+                        reqBadge.classList.add('hidden');
+                    }
+                }
+            }
+
             window._jobImages = {};
 
             const filtered = jobs.filter(j => {
+                if(j.ID === 'SYSTEM_SETTINGS_V1') return false;
+                
                 const status = calculateJobStatus(j);
                 if (!showCompleted && status.isComplete) return false;
                 const searchString = [j.JobNo, j.Customer, j.Size, j.GSM, j.Color, j.CutLength + "cm"].join(" ").toLowerCase();
@@ -809,7 +1099,6 @@ unlockedFeatures.search ? 'block' : 'none';
                 
                 const scheduleHtml = schedules.map(s => {
                     const formattedDate = s.date ? new Date(s.date).toLocaleDateString('en-GB', {day:'2-digit', month:'short'}) : '';
-                    // FEATURE: Qty ke saath "Bags" show karna
                     const displayQty = s.qty ? formatNum(s.qty) + ' Bags' : '';
                     
                     if(!formattedDate && !displayQty && !s.note) return '';
@@ -829,8 +1118,6 @@ unlockedFeatures.search ? 'block' : 'none';
                 const card = document.createElement('div');
                 card.className = 'job-card';
                 card.id = `job-card-${j.ID}`;
-                
-                // CLIPBOARD ADMIN CONTROL: Double click only works if admin features are active
                 card.setAttribute('ondblclick', `copyToClipboard('${j.ID}', this)`);
                 
                 card.innerHTML = `
@@ -856,9 +1143,9 @@ unlockedFeatures.search ? 'block' : 'none';
                             </div>
                         </div>
                         <div class="flex flex-col gap-2">
-                            ${unlockedFeatures.prod ? `<button onclick="openProd('${j.ID}')" class="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center shadow-lg"><i class="fa-solid fa-plus"></i></button>` : ''}
-                            ${unlockedFeatures.todo ? `<button onclick="openSchedule('${j.ID}')" class="w-10 h-10 bg-slate-900 text-white rounded-xl flex items-center justify-center"><i class="fa-solid fa-list-check"></i></button>` : ''}
-                            ${unlockedFeatures.edit ? `
+                            ${renderFeatures.prod ? `<button onclick="openProd('${j.ID}')" class="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center shadow-lg"><i class="fa-solid fa-plus"></i></button>` : ''}
+                            ${renderFeatures.todo ? `<button onclick="openSchedule('${j.ID}')" class="w-10 h-10 bg-slate-900 text-white rounded-xl flex items-center justify-center"><i class="fa-solid fa-list-check"></i></button>` : ''}
+                            ${renderFeatures.edit ? `
                                 <button onclick="openEdit('${j.ID}')" class="w-10 h-8 bg-slate-100 text-slate-400 rounded-lg flex items-center justify-center"><i class="fa-solid fa-pen"></i></button>
                                 <button onclick="confirmDelete('${j.ID}')" class="w-10 h-8 bg-red-50 text-red-500 rounded-lg flex items-center justify-center"><i class="fa-solid fa-trash"></i></button>
                             ` : ''}
@@ -867,18 +1154,20 @@ unlockedFeatures.search ? 'block' : 'none';
                     <div class="mt-5 pt-4 border-t border-slate-100">
                         <div class="flex justify-between items-end mb-2">
                             <div class="flex flex-col">
-                                <span class="stock-label"><i class="fa-solid fa-boxes-stacked"></i> Stock: ${formatNum(j.Stock || 0)} Mtrs</span>
+                                ${(j.Stock && Number(j.Stock) > 0) ? `<span class="stock-label"><i class="fa-solid fa-boxes-stacked"></i> Stock: ${formatNum(j.Stock)} Mtrs</span>` : ''}
                                 <span class="text-[9px] font-black text-slate-400 uppercase mt-0.5 flex items-center gap-1"><i class="fa-solid fa-gear spin-icon"></i> Production Progress</span>
                             </div>
                             <div class="flex flex-col items-end">
-                                <span class="remaining-badge mb-1">${formatNum(Math.floor(remainingMtrs))} Remaining Mtrs</span>
                                 <span class="text-sm font-black text-blue-600">${pct}%</span>
                             </div>
                         </div>
                         <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
                             <div class="h-full ${isComplete ? 'bg-emerald-500' : 'bg-blue-600'}" style="width: ${pct}%"></div>
                         </div>
-                        <div class="flex justify-between mt-1"><span class="text-[10px] font-bold text-slate-500">${formatNum(Math.floor(done))} / ${formatNum(req)} Mtrs</span></div>
+                        <div class="flex justify-between mt-1 items-center">
+                            <span class="text-[10px] font-bold text-slate-500">${formatNum(Math.floor(done))} / ${formatNum(req)} Mtrs</span>
+                            <span class="remaining-badge">Remaining : <span class="text-red-700">${formatNum(Math.floor(remainingMtrs))}</span> Mtrs</span>
+                        </div>
                     </div>`;
                 
                 list.appendChild(card);
@@ -886,10 +1175,29 @@ unlockedFeatures.search ? 'block' : 'none';
             updatePendingBadge();
         }
 
+        // Fixed Refresh Icon Pending Badge Logic
         function updatePendingBadge() {
-            const count = jobs.filter(j => !calculateJobStatus(j).isComplete).length;
+            const count = jobs.filter(j => j.ID !== 'SYSTEM_SETTINGS_V1' && !calculateJobStatus(j).isComplete).length;
             const b = document.getElementById('pending-badge');
-            if (count > 0) { b.innerText = count; b.classList.remove('hidden'); } else { b.classList.add('hidden'); }
+            if (b) {
+                if (count > 0) { 
+                    b.innerText = count; 
+                    b.classList.remove('hidden'); 
+                } else { 
+                    b.classList.add('hidden'); 
+                }
+            }
+        }
+
+        async function silentPullData() {
+            try { 
+                const r = await fetch(API); 
+                const d = await r.json(); 
+                if (Array.isArray(d)) { 
+                    jobs = d; 
+                    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(jobs)); 
+                } 
+            } catch(e) {}
         }
 
         async function pullData() {
@@ -900,6 +1208,7 @@ unlockedFeatures.search ? 'block' : 'none';
                 if (Array.isArray(d)) { 
                     jobs = d; 
                     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(jobs)); 
+                    updateLocalPermissions(); 
                     renderJobs(); 
                 } 
             } catch(e) { 
@@ -1170,8 +1479,10 @@ unlockedFeatures.search ? 'block' : 'none';
         function closeModals() { 
             document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); 
             activeId = null; 
+            editingUserId = null;
         }
     </script>
 </body>
 </html>
+
 
