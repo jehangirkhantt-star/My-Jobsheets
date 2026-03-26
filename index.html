@@ -2,25 +2,66 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Job Master Pro - Premium UI</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#ffffff">
+    <title>Job Master Pro - App Version</title>
+    
+    <!-- External Libraries -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
         
-    
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background: #f1f5f9; 
-            margin: 0; 
+        /* --- APP RESET & BASE --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
             -webkit-tap-highlight-color: transparent;
         }
-        
-        #global-auth-overlay, #waiting-overlay {
+
+        body { 
+            background: #f1f5f9; 
+            overflow: hidden; 
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100vw;
+            transition: background-color 0.3s ease;
+        }
+
+        /* --- DARK MODE CSS OVERRIDES --- */
+        body.dark-theme { background-color: #0f172a; color: #f8fafc; }
+        body.dark-theme .top-app-bar, body.dark-theme .bottom-nav { background-color: #1e293b; border-color: #334155; }
+        body.dark-theme .app-title, body.dark-theme #app-bar-profile-name { color: #f8fafc; }
+        body.dark-theme .app-title span { color: #60a5fa; }
+        body.dark-theme .welcome-text, body.dark-theme .home-card-title, body.dark-theme h2, body.dark-theme h3, body.dark-theme h4 { color: #f8fafc !important; }
+        body.dark-theme .job-card, body.dark-theme .home-card, body.dark-theme .auth-card, body.dark-theme .modal-content, body.dark-theme #dropdown-menu { background-color: #1e293b; border-color: #334155; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.5); }
+        body.dark-theme .bg-slate-50, body.dark-theme .bg-white { background-color: #0f172a !important; border-color: #1e293b !important; }
+        body.dark-theme #admin-search-container { background-color: transparent !important; }
+        body.dark-theme #admin-search-container .bg-white { background-color: #1e293b !important; border-color: #334155 !important; }
+        body.dark-theme .text-slate-800, body.dark-theme .text-slate-900 { color: #f8fafc !important; }
+        body.dark-theme .text-slate-700 { color: #cbd5e1 !important; }
+        body.dark-theme .text-slate-500 { color: #94a3b8 !important; }
+        body.dark-theme input, body.dark-theme textarea, body.dark-theme select { background-color: #0f172a !important; color: #f8fafc !important; border-color: #334155 !important; }
+        body.dark-theme .nav-item.active { color: #f8fafc; }
+        body.dark-theme .nav-item.active i { background-color: #334155; color: #60a5fa; }
+        body.dark-theme .border-slate-100, body.dark-theme .border-slate-200 { border-color: #334155 !important; }
+        body.dark-theme .todo-item-inline { background-color: #0f172a; border-color: #334155; color: #cbd5e1; }
+        body.dark-theme #dropdown-menu button:hover { background-color: #334155 !important; }
+        body.dark-theme .status-badge.bg-amber-100 { background-color: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+        body.dark-theme .status-badge.bg-emerald-100 { background-color: rgba(16, 185, 129, 0.2); color: #34d399; }
+        body.dark-theme .prod-log-item { background-color: #0f172a; border-color: #334155; }
+
+        /* --- OVERLAYS & MODALS --- */
+        #global-auth-overlay {
             position: fixed;
             inset: 0;
-            background: #0f172a;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
             z-index: 9999;
             display: flex;
             align-items: center;
@@ -30,57 +71,35 @@
         }
 
         .auth-card {
-            background: white;
+            background: rgba(255, 255, 255, 0.95);
             width: 100%;
             max-width: 360px;
             padding: 40px 30px;
-            border-radius: 30px;
+            border-radius: 32px;
             text-align: center;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
-        .job-card { 
-            background: white; 
-            border-radius: 20px; 
-            padding: 20px; 
-            margin-bottom: 18px; 
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03); 
-            border: 1px solid #e2e8f0;
-            position: relative;
-            overflow: hidden;
-            cursor: pointer;
-            user-select: none;
-            transition: transform 0.1s;
-        }
-        .job-card:active { transform: scale(0.98); }
-
-        .copy-toast {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+        #waiting-overlay {
+            position: fixed;
+            inset: 0;
             background: rgba(15, 23, 42, 0.95);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 14px;
-            font-size: 11px;
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            pointer-events: none;
-            opacity: 0;
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            z-index: 100;
-            border: 1px solid rgba(255,255,255,0.1);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            flex-direction: column;
         }
-        .copy-toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
 
         .modal { 
             display: none; 
             position: fixed; 
             inset: 0; 
-            background: rgba(15, 23, 42, 0.7); 
-            z-index: 1000; 
+            background: rgba(15, 23, 42, 0.75); 
+            z-index: 10000; 
             align-items: center; 
             justify-content: center; 
             padding: 15px; 
@@ -90,225 +109,174 @@
             background: white; 
             width: 100%; 
             max-width: 450px; 
-            border-radius: 24px; 
+            border-radius: 28px; 
             padding: 28px; 
             max-height: 90vh; 
             overflow-y: auto; 
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+        }
+
+        /* --- ANDROID LAYOUT COMPONENTS --- */
+        .top-app-bar {
+            background-color: #ffffff;
+            height: 64px;
+            padding: 0 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            z-index: 50;
+            flex-shrink: 0;
+            position: relative;
+        }
+        .app-title { font-size: 20px; font-weight: 800; color: #111827; text-transform: uppercase; letter-spacing: -0.5px; display: flex; align-items: center; gap: 4px;}
+        .app-title span { color: #2563eb; }
+        .top-icons { display: flex; gap: 8px; color: #4b5563; font-size: 24px; align-items: center; }
+
+        .content-area {
+            flex: 1; 
+            overflow-y: auto; 
+            position: relative;
         }
         
+        .tab-pane {
+            display: none;
+            padding-bottom: 90px; 
+        }
+        .tab-pane.active {
+            display: block;
+        }
+
+        .fab {
+            position: fixed;
+            bottom: 85px; 
+            right: 16px;
+            width: 56px;
+            height: 56px;
+            background-color: #2563eb;
+            color: white;
+            border-radius: 16px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+            border: none;
+            cursor: pointer;
+            z-index: 60;
+            transition: transform 0.2s ease, background-color 0.2s ease;
+        }
+        .fab:active { transform: scale(0.95); background-color: #1d4ed8; }
+
+        .bottom-nav {
+            background-color: #ffffff;
+            height: 65px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            border-top: 1px solid #e5e7eb;
+            padding-bottom: env(safe-area-inset-bottom);
+            z-index: 50;
+            flex-shrink: 0;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+        }
+        .nav-item {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            gap: 4px; color: #6b7280; text-decoration: none; width: 60px; height: 100%;
+            transition: color 0.2s ease;
+        }
+        .nav-item i { font-size: 24px; padding: 4px 12px; border-radius: 16px; transition: background-color 0.2s ease; }
+        .nav-item span { font-size: 11px; font-weight: 500; }
+        .nav-item.active { color: #111827; }
+        .nav-item.active i { background-color: #dbeafe; color: #2563eb; font-weight: bold; }
+
+        /* --- JOB MASTER PRO COMPONENTS --- */
+        .job-card { 
+            background: white; border-radius: 20px; padding: 20px; margin-bottom: 18px; 
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03); 
+            border: 1px solid #e2e8f0; position: relative; overflow: hidden;
+            cursor: pointer; user-select: none; transition: transform 0.1s, border-color 0.2s;
+        }
+        .job-card:active { transform: scale(0.98); }
+        .job-card.selected-card { border: 2px solid #2563eb; background-color: rgba(37, 99, 235, 0.05); }
+        body.dark-theme .job-card.selected-card { border: 2px solid #60a5fa; background-color: rgba(96, 165, 250, 0.1); }
+
+        .copy-toast {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: rgba(15, 23, 42, 0.95); color: white; padding: 10px 20px;
+            border-radius: 14px; font-size: 11px; font-weight: 900; text-transform: uppercase;
+            letter-spacing: 1.5px; pointer-events: none; opacity: 0;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 100;
+        }
+        .copy-toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+
         .sync-anim { animation: rotate 1s linear infinite; }
         @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .pulse-live { animation: pulseLive 2s infinite; }
+        @keyframes pulseLive { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
         
-        .status-badge { font-size: 0.65rem; font-weight: 800; padding: 4px 10px; border-radius: 8px; text-transform: uppercase; letter-spacing: 0.05em; }
-        
-        .printing-label {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 11px;
-            font-weight: 700;
-            margin-top: 8px;
-            color: #10b981;
-        }
-
-        .todo-item-inline {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 11px;
-            font-weight: 700;
-            margin-top: 5px;
-            color: #475569;
-            background: #f8fafc;
-            padding: 4px 10px;
-            border-radius: 8px;
-            border: 1px solid #f1f5f9;
-        }
+        .status-badge { font-size: 0.65rem; font-weight: 800; padding: 4px 10px; border-radius: 8px; text-transform: uppercase; }
+        .printing-label { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; margin-top: 8px; color: #10b981; }
+        .todo-item-inline { display: flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 700; margin-top: 5px; color: #475569; background: #f8fafc; padding: 4px 10px; border-radius: 8px; border: 1px solid #f1f5f9; }
         .todo-item-inline.done { opacity: 0.6; background: #f1f5f9; }
         .todo-item-inline.done span { text-decoration: line-through; }
+        .todo-text-content { display: flex; align-items: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
+        .todo-note-text { font-weight: 600; color: #64748b; margin-left: 5px; font-style: normal; }
+        .instruction-text { color: #ef4444; font-size: 10px; font-weight: 800; text-transform: uppercase; margin-top: 6px; padding-top: 6px; border-top: 1px dashed #fee2e2; display: flex; align-items: flex-start; gap: 4px; white-space: pre-wrap; text-align: left; }
+        .badge-pulse { position: absolute; top: -5px; right: -5px; background: #ef4444; color: white; font-size: 10px; font-weight: 900; min-width: 18px; height: 18px; border-radius: 99px; display: flex; align-items: center; justify-content: center; padding: 0 4px; border: 2px solid #ffffff; z-index: 10; }
         
-        .todo-text-content {
-            display: flex;
-            align-items: center;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            width: 100%;
-        }
+        .toggle-active { color: #2563eb !important; background-color: #dbeafe !important; } 
+        body.dark-theme .toggle-active { color: #60a5fa !important; background-color: #1e3a8a !important; }
         
-        .todo-note-text { 
-            font-weight: 600; 
-            color: #64748b; 
-            margin-left: 5px; 
-            font-style: normal;
-        }
-
-        .instruction-text {
-            color: #ef4444;
-            font-size: 10px;
-            font-weight: 800;
-            text-transform: uppercase;
-            margin-top: 6px;
-            padding-top: 6px;
-            border-top: 1px dashed #fee2e2;
-            display: flex;
-            align-items: flex-start;
-            gap: 4px;
-            white-space: pre-wrap; 
-            text-align: left;
-        }
-
-        .badge-pulse {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            background: #ef4444;
-            color: white;
-            font-size: 10px;
-            font-weight: 900;
-            min-width: 18px;
-            height: 18px;
-            border-radius: 99px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0 4px;
-            border: 2px solid #0f172a;
-        }
-
-        .toggle-active {
-            background-color: #3b82f6 !important;
-            color: white !important;
-            border-color: #2563eb !important;
-        }
-        
-        .dot-separator::after {
-            content: "•";
-            margin: 0 6px;
-            color: #cbd5e1;
-            font-weight: normal;
-        }
+        .dot-separator::after { content: "•"; margin: 0 6px; color: #cbd5e1; font-weight: normal; }
         .dot-separator:last-child::after { content: ""; }
-
-        .image-upload-box {
-            background: #f8fafc;
-            border: 2px dashed #cbd5e1;
-            border-radius: 16px;
-            padding: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 8px;
-        }
         
-        #image-viewer-modal {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.95);
-            z-index: 2000;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
-            overflow-y: auto;
-        }
-        .preview-img-container {
-            width: 100%;
-            max-width: 600px;
-            display: flex;
-            flex-direction: column;
-            gap: 24px;
-            padding: 60px 0;
-        }
-        .preview-img-card {
-            background: #1e293b;
-            border-radius: 20px;
-            overflow: hidden;
-            border: 1px solid #334155;
-        }
-        .preview-img-tag {
-            background: #3b82f6;
-            color: white;
-            font-size: 11px;
-            font-weight: 900;
-            text-transform: uppercase;
-            padding: 8px 16px;
-            display: block;
-            text-align: center;
-        }
+        .image-upload-box { background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 16px; padding: 12px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+        #image-viewer-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 20000; flex-direction: column; align-items: center; padding: 20px; overflow-y: auto; }
+        .preview-img-container { width: 100%; max-width: 600px; display: flex; flex-direction: column; gap: 24px; padding: 60px 0; }
+        .preview-img-card { background: #1e293b; border-radius: 20px; overflow: hidden; border: 1px solid #334155; }
+        .preview-img-tag { background: #3b82f6; color: white; font-size: 11px; font-weight: 900; text-transform: uppercase; padding: 8px 16px; display: block; text-align: center; }
         .preview-img-container img { width: 100%; height: auto; display: block; object-fit: contain; }
-        
         .img-loading { font-size: 9px; font-weight: bold; color: #3b82f6; animation: pulse 1s infinite; }
         
-        .prod-log-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 14px;
-            background: #f8fafc;
-            border-radius: 12px;
-            margin-bottom: 6px;
-            border: 1px solid #f1f5f9;
-        }
-
-        .stock-label {
-            font-size: 9px;
-            font-weight: 900;
-            color: #059669; 
-            text-transform: uppercase;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
+        .prod-log-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: white; border-radius: 16px; margin-bottom: 8px; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .stock-label { font-size: 9px; font-weight: 900; color: #059669; text-transform: uppercase; display: flex; align-items: center; gap: 4px; }
         .spin-icon { animation: spin 3s linear infinite; display: inline-block; }
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .deleting-overlay { position: absolute; inset: 0; background: rgba(255, 255, 255, 0.8); display: flex; align-items: center; justify-content: center; z-index: 50; backdrop-filter: blur(2px); }
+        .remaining-badge { font-size: 10px; font-weight: 800; color: #6b7280; padding: 3px 0; text-transform: uppercase; letter-spacing: 0.02em; }
 
-        .deleting-overlay {
-            position: absolute;
-            inset: 0;
-            background: rgba(255, 255, 255, 0.8);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 50;
-            backdrop-filter: blur(2px);
-        }
+        .welcome-text { font-size: 24px; font-weight: 600; margin-bottom: 16px; color: #1f2937; }
+        .home-card { background-color: #ffffff; border-radius: 20px; padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.03); border: 1px solid #e5e7eb; }
+        .home-card-title { font-weight: 800; font-size: 16px; margin-bottom: 8px; color: #111827;}
+        .home-card-text { font-size: 14px; color: #6b7280; line-height: 1.5; }
 
-        .remaining-badge {
-            font-size: 10px;
-            font-weight: 800;
-            color: #6b7280; 
-            padding: 3px 0;
-            text-transform: uppercase;
-            letter-spacing: 0.02em;
+        /* Custom Toggle Switch for Admin Setup */
+        .toggle-switch {
+            position: relative; width: 44px; height: 24px; appearance: none;
+            background: #e2e8f0; border-radius: 99px; outline: none; cursor: pointer; transition: 0.3s;
+            flex-shrink: 0;
         }
+        .toggle-switch::after {
+            content: ''; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px;
+            background: white; border-radius: 50%; transition: 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .toggle-switch:checked { background: #4f46e5; }
+        .toggle-switch:checked::after { transform: translateX(20px); }
+        body.dark-theme .toggle-switch { background: #334155; }
+        
+        .timeline-container { border-left: 2px solid #e2e8f0; margin-left: 12px; padding-left: 20px; position: relative; }
+        body.dark-theme .timeline-container { border-color: #334155; }
+        .timeline-item { position: relative; margin-bottom: 16px; }
+        .timeline-dot { position: absolute; left: -29px; top: 4px; width: 16px; height: 16px; border-radius: 50%; background: white; border: 3px solid #3b82f6; box-shadow: 0 0 0 4px #f8fafc; }
+        body.dark-theme .timeline-dot { background: #0f172a; box-shadow: 0 0 0 4px #0f172a; }
+        .timeline-dot.done { border-color: #10b981; background: #10b981; }
 
-        .selection-active {
-            border:3px solid #3b82f6 !important;
-            box-shadow:0 0 0 3px rgba(59,130,246,.2);
-        }
-
-        .report-bar{
-            position:fixed;
-            bottom:0;
-            left:0;
-            right:0;
-            background:#0f172a;
-            color:white;
-            padding:14px;
-            display:none;
-            justify-content:space-between;
-            align-items:center;
-            z-index:999;
-        }
     </style>
 </head>
 
 <body>
 
-    <!-- Action Toast Notification (Success/Disallow Messages) -->
-    <div id="action-toast" class="fixed top-10 left-1/2 transform -translate-x-1/2 bg-emerald-500 text-white px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-2xl z-[9999] transition-all duration-300 opacity-0 pointer-events-none translate-y-[-20px] flex items-center gap-2">
+    <!-- Action Toast Notification -->
+    <div id="action-toast" class="fixed top-20 left-1/2 transform -translate-x-1/2 bg-emerald-500 text-white px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-2xl z-[99999] transition-all duration-300 opacity-0 pointer-events-none translate-y-[-20px] flex items-center gap-2">
         <span id="action-toast-icon"><i class="fa-solid fa-circle-check"></i></span>
         <span id="action-toast-msg">Success</span>
     </div>
@@ -316,77 +284,247 @@
     <!-- Auth Lock Screen -->
     <div id="global-auth-overlay">
         <div class="auth-card">
-            <div class="w-20 h-20 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl">
-                <i class="fa-solid fa-lock"></i>
+            <div class="w-20 h-20 bg-gradient-to-tr from-blue-600 to-indigo-500 text-white rounded-full flex items-center justify-center mx-auto mb-6 text-3xl shadow-xl shadow-blue-500/30">
+                <i class="fa-solid fa-shield-halved"></i>
             </div>
-            <h2 class="text-2xl font-black text-slate-800 mb-2 uppercase tracking-tighter">APP LOCKED</h2>
-            <p class="text-slate-500 text-xs font-bold mb-8 uppercase tracking-widest">Enter access code to continue</p>
-            <input type="password" id="global-pass-input" placeholder="••••••" class="w-full text-center bg-slate-100 border-2 border-slate-200 p-4 rounded-2xl text-xl font-black outline-none focus:border-blue-500 tracking-[0.5em] mb-4">
-            <button onclick="checkGlobalAuth()" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-black shadow-xl shadow-blue-500/30 active:scale-95 transition-transform uppercase tracking-widest text-sm">UNLOCK APP</button>
-            <p id="auth-error-msg" class="text-red-500 text-[10px] font-bold mt-4 uppercase hidden">Incorrect code. Please try again.</p>
+            <h2 class="text-2xl font-black text-slate-800 mb-2 uppercase tracking-tighter">Secure Access</h2>
+            <p class="text-slate-500 text-[10px] font-bold mb-8 uppercase tracking-widest">Job Master Pro encrypted terminal</p>
+            <input type="password" id="global-pass-input" placeholder="••••••" class="w-full text-center bg-slate-50 border-2 border-slate-200 p-4 rounded-2xl text-xl font-black outline-none focus:border-blue-500 focus:bg-white tracking-[0.5em] mb-4 transition-all">
+            <button onclick="checkGlobalAuth()" class="w-full bg-slate-900 text-white py-4 rounded-2xl font-black shadow-xl active:scale-95 transition-transform uppercase tracking-widest text-sm flex justify-center items-center gap-2">
+                <i class="fa-solid fa-unlock-keyhole"></i> UNLOCK APP
+            </button>
+            <p id="auth-error-msg" class="text-red-500 text-[10px] font-bold mt-4 uppercase hidden">Incorrect code. Access Denied.</p>
         </div>
     </div>
     
-    <!-- Waiting / Approval Overlay for Users -->
+    <!-- Waiting Overlay -->
     <div id="waiting-overlay" style="display:none;">
         <i class="fa-solid fa-hourglass-half text-blue-500 text-6xl mb-6 sync-anim"></i>
         <h2 class="text-2xl font-black text-white mb-2 uppercase tracking-tighter text-center">Waiting for Approval</h2>
         <p class="text-slate-400 text-xs font-bold text-center max-w-xs leading-relaxed">Your device request has been sent successfully. Please ask the Admin to approve your request to gain access.</p>
     </div>
 
-    <!-- Main Content -->
-    <div id="main-app-content" style="display: none;">
-        <div class="bg-slate-900 text-white p-5 sticky top-0 z-50 shadow-2xl">
-            <div class="flex justify-between items-center mb-4">
-                <div>
-                    <h1 class="text-2xl font-black tracking-tighter uppercase">JOB<span class="text-blue-500">MASTER</span></h1>
-                    <p class="text-[10px] font-bold text-slate-400 tracking-widest uppercase">Production Management</p>
+    <!-- MAIN APP CONTAINER -->
+    <div id="main-android-app" style="display: none; height: 100%; flex-direction: column;">
+        
+        <!-- MAIN TOP APP BAR -->
+        <header class="top-app-bar flex justify-between items-center" id="main-app-bar">
+            
+            <!-- Default View -->
+            <div id="normal-top-bar" class="w-full flex justify-between items-center h-full">
+                <!-- App Bar Left: Title OR Profile Pic + Name -->
+                <div id="app-bar-left-container" class="flex items-center gap-3">
+                    <div id="default-title" class="app-title">Job<span>Master</span></div>
+                    <div id="profile-title" class="hidden flex items-center gap-2.5 cursor-pointer" onclick="switchTab('tab-profile', document.querySelector('.nav-item:nth-child(4)'))">
+                        <img id="app-bar-profile-pic" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOTRhM2I4IiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHBhdGggZD0iTTIwIDIxdi0yYTRgNCAwIDAgMC00LTRINThhNCA0IDAgMCAwLTQgNHYyIj48L3BhdGg+PGNpcmNsZSBjeD0iMTIiIGN5PSI3IiByPSI0Ij48L2NpcmNsZT48L3N2Zz4=" class="w-10 h-10 rounded-full object-cover border-[3px] border-white shadow-sm bg-slate-100 p-1">
+                        <div class="flex flex-col justify-center">
+                            <span id="app-bar-profile-name" class="font-black text-slate-800 text-[15px] leading-tight tracking-tight capitalize"></span>
+                        </div>
+                    </div>
                 </div>
-                <div class="flex gap-2">
-                    <div class="relative">
-                        <!-- Eye Icon -->
-                        <button id="toggle-complete-btn" title="Toggle Show/Hide" onclick="toggleCompleted()" ondblclick="handleEyeDoubleClick()" class="bg-slate-800 p-2.5 rounded-xl active:scale-90 border border-slate-700 text-slate-400 transition-colors relative">
-                            <i id="eye-icon" class="fa-solid fa-eye-slash"></i>
+                
+                <!-- Home Tab Icons (Visible ONLY when Home tab is open) -->
+                <div class="top-icons items-center flex relative" id="activity-top-icons">
+                    
+                    <!-- Toggle Search -->
+                    <button id="toggle-search-btn" title="Toggle Search" onclick="toggleSearchBox()" class="w-9 h-9 flex items-center justify-center rounded-xl active:scale-90 text-slate-400 hover:bg-slate-100 transition-colors hidden">
+                        <i class="fa-solid fa-magnifying-glass text-[16px]"></i>
+                    </button>
+
+                    <!-- Sync Icon -->
+                    <button id="sync-icon-btn" onclick="pullData()" class="relative w-9 h-9 flex items-center justify-center rounded-xl hover:bg-slate-100 active:scale-90 transition-transform" title="Sync Data">
+                        <i id="sync-icon" class="ph ph-arrows-clockwise text-blue-600 font-bold"></i>
+                        <!-- Pending Badge -->
+                        <div id="pending-badge" class="badge-pulse hidden" style="top: 0px; right: 0px;">0</div>
+                    </button>
+
+                    <!-- 3 Dots Sidebar Menu -->
+                    <div class="relative flex items-center">
+                        <button id="menu-btn" onclick="toggleMenu()" class="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-slate-100 active:scale-90 transition-transform">
+                            <i class="ph ph-dots-three-vertical text-[24px]"></i>
                         </button>
-                        <!-- Admin Notification Badge -->
-                        <div id="admin-req-badge" class="badge-pulse hidden">0</div>
+                        
+                        <!-- Dropdown Menu Content -->
+                        <div id="dropdown-menu" class="hidden absolute right-0 top-[45px] bg-white shadow-2xl rounded-xl border border-slate-100 w-52 py-2 z-[100] flex-col overflow-hidden">
+                            <!-- New Show Completed Toggle -->
+                            <button onclick="toggleCompletedMenu()" class="text-left px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-3 transition-colors">
+                                <i id="menu-eye-icon" class="fa-solid fa-eye-slash text-indigo-500 w-5 text-center text-lg"></i> <span id="menu-eye-text">Completed Jobs</span>
+                            </button>
+                            <div class="h-[1px] bg-slate-100 w-full my-1"></div>
+                            
+                            <button onclick="toggleDarkMode()" class="text-left px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-3 transition-colors"><i class="ph ph-moon text-lg w-5 text-center"></i> <span id="theme-text">Dark Mode</span></button>
+                            <button onclick="exportDataToCSV()" class="text-left px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-3 transition-colors" id="export-menu-item" style="display:none;"><i class="fa-solid fa-file-csv text-emerald-600 w-5 text-center"></i> Export CSV</button>
+                            <button onclick="openSortModal()" class="text-left px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-3 transition-colors"><i class="fa-solid fa-arrow-down-a-z text-blue-500 w-5 text-center"></i> Sort Jobs</button>
+                            <div class="h-[1px] bg-slate-100 w-full my-1"></div>
+                            <button onclick="openSettingsModal()" class="text-left px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-3 transition-colors"><i class="fa-solid fa-gear text-slate-400 w-5 text-center"></i> Settings</button>
+                        </div>
                     </div>
-                    <div class="relative">
-                        <!-- Refresh Icon -->
-                        <button id="sync-icon-btn" title="Sync Data" onclick="pullData()" class="bg-slate-800 p-2.5 rounded-xl active:scale-90 border border-slate-700 relative">
-                            <i id="sync-icon" class="fa-solid fa-rotate text-blue-400"></i>
-                        </button>
-                        <!-- Pending Jobs Badge -->
-                        <div id="pending-badge" class="badge-pulse hidden">0</div>
-                    </div>
-                    <button id="new-job-btn" onclick="openNewJob()" class="bg-blue-600 text-white px-5 py-2 rounded-xl font-black text-xs shadow-lg shadow-blue-900/20 uppercase hidden">NEW JOB</button>
                 </div>
             </div>
+
+            <!-- Selection Mode Top Bar (Hidden by default) -->
+            <div id="selection-bar" class="hidden absolute inset-0 bg-blue-600 px-4 flex justify-between items-center text-white z-[60]">
+                <div class="flex items-center gap-4">
+                    <button onclick="exitSelectionMode()" class="text-xl active:scale-90 transition-transform"><i class="fa-solid fa-xmark"></i></button>
+                    <span id="selection-count" class="font-bold tracking-wide">1 Selected</span>
+                </div>
+                <button onclick="exportDataToCSV()" class="text-xl active:scale-90 transition-transform" title="Export Selected" style="display:none;"><i class="fa-solid fa-file-csv"></i></button>
+            </div>
+
+        </header>
+
+        <!-- MAIN SCROLLABLE CONTENT AREA -->
+        <main class="content-area">
             
-            <!-- Search Filter: Only Visible when features are unlocked by Admin -->
-            <div class="relative" id="admin-search-container" style="display: none;">
-                <i class="fa-solid fa-search absolute left-4 top-3.5 text-slate-500"></i>
-                <input type="text" id="search" oninput="renderJobs()" placeholder="Search No, Name, Size, GSM, Color..." class="w-full pl-12 p-3.5 rounded-xl text-slate-900 text-sm font-semibold outline-none focus:ring-4 ring-blue-500/20">
+            <!-- HOME TAB -->
+            <div id="tab-home" class="tab-pane active">
+                <!-- Search Filter -->
+                <div class="sticky top-0 z-[40] bg-[#f1f5f9] px-4 py-3" id="admin-search-container" style="display: none;">
+                    <div class="relative bg-white rounded-xl shadow-sm border border-slate-200">
+                        <i class="fa-solid fa-search absolute left-4 top-3.5 text-slate-400"></i>
+                        <input type="text" id="search" oninput="renderJobs()" placeholder="Search Date, No, Name, Size, GSM, Color..." class="w-full pl-11 p-3 rounded-xl text-slate-900 text-sm font-semibold outline-none focus:ring-2 ring-blue-500/20 bg-transparent">
+                    </div>
+                </div>
+
+                <!-- Jobs List -->
+                <div id="list" class="px-4 pb-4 max-w-2xl mx-auto pt-2"></div>
+            </div>
+
+            <!-- DASHBOARD TAB -->
+            <div id="tab-dashboard" class="tab-pane p-4">
+                <div class="sticky top-0 bg-[#f1f5f9] pb-2 z-10 pt-2">
+                    <h1 class="text-2xl font-black text-slate-800 tracking-tight">Dashboard</h1>
+                    <p class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mt-1">Overview & Analytics</p>
+                </div>
+                <div id="dashboard-content" class="mt-4 pb-4">
+                    <!-- Dynamic Dashboard content injected via JS -->
+                </div>
+            </div>
+
+            <!-- ACTIVITY TAB -->
+            <div id="tab-activity" class="tab-pane p-4">
+                <div class="sticky top-0 bg-[#f1f5f9] pb-2 z-10 pt-2 flex justify-between items-end">
+                    <div>
+                        <h1 class="text-2xl font-black text-slate-800 tracking-tight">Activity</h1>
+                        <p class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mt-1 flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-red-500 pulse-live"></span> Live Production</p>
+                    </div>
+                </div>
+                <div id="activity-list" class="mt-4 flex flex-col gap-3 pb-4">
+                    <!-- Dynamic Activity Cards will appear here -->
+                </div>
+            </div>
+
+            <!-- PROFILE TAB -->
+            <div id="tab-profile" class="tab-pane p-4">
+                <h1 class="welcome-text" id="profile-main-heading">User Profile</h1>
+                
+                <!-- Profile Setup Section -->
+                <div id="profile-setup-section" class="home-card text-center mb-6">
+                   <div class="relative w-24 h-24 mx-auto mb-4 cursor-pointer" onclick="document.getElementById('profile-pic-input').click()">
+                       <div id="profile-setup-icon" class="w-full h-full bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-4xl border-4 border-white shadow-md"><i class="fa-solid fa-camera"></i></div>
+                       <img id="profile-setup-preview" src="" class="hidden w-full h-full rounded-full object-cover border-4 border-white shadow-md">
+                       <div class="absolute bottom-0 right-0 bg-slate-900 text-white w-8 h-8 rounded-full flex items-center justify-center border-2 border-white shadow-sm"><i class="fa-solid fa-pen text-xs"></i></div>
+                   </div>
+                   <input type="file" id="profile-pic-input" accept="image/*" class="hidden" onchange="handleProfilePicSetup(event)">
+                   
+                   <h3 class="font-black text-slate-800 text-lg mb-1">Setup Your Profile</h3>
+                   <p class="text-[10px] text-slate-500 mb-4 font-bold uppercase tracking-widest">Enter your name to be recognized in logs</p>
+                   <input type="text" id="profile-name-input" placeholder="Your Full Name" class="w-full bg-slate-50 border border-slate-200 p-3.5 rounded-xl text-sm font-bold outline-none focus:border-blue-500 mb-3 text-center transition-colors">
+                   <button onclick="saveUserProfile()" class="w-full bg-blue-600 text-white py-3.5 rounded-xl font-black uppercase text-xs tracking-widest shadow-lg shadow-blue-500/30 active:scale-95 transition-transform flex items-center justify-center gap-2"><i class="fa-solid fa-user-check"></i> Save Profile</button>
+                </div>
+
+                <!-- Profile Display Section -->
+                <div id="profile-display-section" class="home-card text-center mb-6 hidden">
+                    <img id="profile-large-avatar-img" src="" class="w-24 h-24 rounded-full object-cover mx-auto mb-3 shadow-lg border-4 border-white" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOTRhM2I4IiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHBhdGggZD0iTTIwIDIxdi0yYTRgNCAwIDAgMC00LTRINThhNCA0IDAgMCAwLTQgNHYyIj48L3BhdGg+PGNpcmNsZSBjeD0iMTIiIGN5PSI3IiByPSI0Ij48L2NpcmNsZT48L3N2Zz4='">
+                    <h3 id="profile-display-name" class="font-black text-slate-800 text-2xl mb-1 capitalize tracking-tight"></h3>
+                    <p id="profile-role-text" class="font-bold text-blue-600 text-[11px] uppercase tracking-widest bg-blue-50 border border-blue-100 inline-block px-4 py-1.5 rounded-full mb-3 shadow-sm"></p>
+                    <p id="profile-device-id" class="text-[9px] text-slate-400 uppercase tracking-widest font-bold"></p>
+                    <button onclick="editUserProfile()" class="mt-5 text-xs font-black text-slate-500 uppercase tracking-widest flex items-center justify-center gap-2 mx-auto bg-slate-50 px-4 py-2 rounded-xl active:scale-95"><i class="fa-solid fa-pen-to-square"></i> Edit Profile</button>
+                </div>
+
+                <!-- Admin Access Panel (Visible only to Admin) -->
+                <div id="profile-admin-section" class="hidden">
+                    <h2 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Admin Configuration</h2>
+                    <button onclick="openAdminControls()" class="w-full bg-white border-2 border-slate-100 text-slate-800 p-4 rounded-2xl flex items-center justify-between shadow-sm active:scale-95 transition-transform group hover:border-blue-200">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center text-2xl group-hover:bg-emerald-500 group-hover:text-white transition-colors">
+                                <i class="fa-solid fa-shield-halved"></i>
+                            </div>
+                            <div class="text-left">
+                                <p class="font-black text-base text-slate-800">Access Controls</p>
+                                <p class="text-[11px] font-bold text-slate-500 mt-0.5">Manage Users & Permissions</p>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-slate-300"></i>
+                    </button>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- FLOATING ACTION BUTTON (Appears only on Home Tab) -->
+        <button class="fab" id="main-fab" style="display: flex;" onclick="openNewJob()">
+            <i class="ph ph-plus"></i>
+        </button>
+
+        <!-- BOTTOM NAVIGATION BAR -->
+        <nav class="bottom-nav">
+            <a href="#" class="nav-item active" onclick="switchTab('tab-home', this)">
+                <i class="ph-fill ph-house"></i>
+                <span>Home</span>
+            </a>
+            <a href="#" class="nav-item" onclick="switchTab('tab-dashboard', this)">
+                <i class="ph ph-squares-four"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="#" class="nav-item" onclick="switchTab('tab-activity', this)">
+                <i class="ph ph-chart-line-up"></i>
+                <span>Activity</span>
+            </a>
+            <a href="#" class="nav-item relative" onclick="switchTab('tab-profile', this)">
+                <div class="relative flex items-center justify-center">
+                    <i class="ph ph-user"></i>
+                    <!-- Admin Requests Badge on Profile Icon -->
+                    <div id="admin-req-badge" class="badge-pulse hidden" style="position: absolute; top: 0px; right: -4px; width: 14px; height: 14px; min-width: 14px; padding: 0; font-size: 8px;">0</div>
+                </div>
+                <span>Profile</span>
+            </a>
+        </nav>
+    </div>
+
+    <!-- MODALS -->
+
+    <!-- Sort Modal -->
+    <div id="modal-sort" class="modal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="font-black text-xl text-slate-800">Sort Jobs</h3>
+                <button onclick="closeModals()" class="text-slate-400"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="flex flex-col gap-3">
+                <button onclick="setSort('newest')" class="w-full text-left p-4 rounded-xl border border-slate-200 font-bold hover:bg-slate-50 flex justify-between items-center">
+                    <span><i class="fa-solid fa-clock-rotate-left mr-2 text-slate-400"></i> Newest First</span>
+                    <i id="sort-check-newest" class="fa-solid fa-check text-blue-500 hidden"></i>
+                </button>
+                <button onclick="setSort('oldest')" class="w-full text-left p-4 rounded-xl border border-slate-200 font-bold hover:bg-slate-50 flex justify-between items-center">
+                    <span><i class="fa-solid fa-clock mr-2 text-slate-400"></i> Oldest First</span>
+                    <i id="sort-check-oldest" class="fa-solid fa-check text-blue-500 hidden"></i>
+                </button>
+                <button onclick="setSort('customer_asc')" class="w-full text-left p-4 rounded-xl border border-slate-200 font-bold hover:bg-slate-50 flex justify-between items-center">
+                    <span><i class="fa-solid fa-arrow-down-a-z mr-2 text-slate-400"></i> Customer Name (A-Z)</span>
+                    <i id="sort-check-customer_asc" class="fa-solid fa-check text-blue-500 hidden"></i>
+                </button>
             </div>
         </div>
-
-        <div id="list" class="p-4 max-w-2xl mx-auto pb-24"></div>
     </div>
-    <div id="report-bar" class="report-bar">
-        <span id="selected-count" class="font-black text-sm">
-            0 Selected
-        </span>
 
-        <div class="flex gap-2">
-            <button onclick="generateReport()" 
-            class="bg-blue-600 px-4 py-2 rounded-xl font-bold text-xs">
-                Generate Report
-            </button>
-
-            <button onclick="exitSelectionMode()" 
-            class="bg-red-500 px-3 py-2 rounded-xl text-xs">
-                Cancel
-            </button>
+    <!-- Settings Placeholder Modal -->
+    <div id="modal-settings" class="modal">
+        <div class="modal-content text-center">
+            <div class="w-16 h-16 bg-slate-100 text-slate-500 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl"><i class="fa-solid fa-gear"></i></div>
+            <h3 class="font-black text-xl mb-2">Settings</h3>
+            <p class="text-slate-500 text-sm mb-6">System configuration and preferences will be available here soon.</p>
+            <button onclick="closeModals()" class="w-full bg-slate-900 py-3.5 rounded-xl font-bold text-white">Close</button>
         </div>
     </div>
     
@@ -411,92 +549,61 @@
         <div class="modal-content">
             <div class="flex justify-between items-center mb-6">
                 <h3 class="font-black text-xl text-slate-800">Admin Controls</h3>
-                <button onclick="closeModals()" class="text-slate-400"><i class="fa-solid fa-xmark text-xl"></i></button>
+                <button onclick="closeModals()" class="text-slate-400 hover:text-slate-700 transition-colors"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
             <div class="space-y-4">
-                <div class="space-y-1" id="inner-security-wrap" style="display:none;">
-                    <label class="text-[10px] font-black text-slate-500 uppercase ml-1">Security Code</label>
-                    <input type="password" id="access-code" placeholder="Enter Secret Code" class="w-full bg-slate-50 border-slate-200 border-2 p-3 rounded-xl text-sm font-bold outline-none focus:border-blue-500">
-                </div>
-                
-                <!-- Hidden Checkboxes from main Admin Control -->
-                <h4 class="hidden text-xs font-black text-slate-500 uppercase mt-4">Default Permissions (New Users)</h4>
-                <div class="hidden grid-cols-1 gap-2 mt-2">
-                    <label class="flex items-center p-3 bg-slate-50 rounded-xl border-2 border-transparent cursor-pointer hover:border-blue-200 transition-all">
-                        <input type="checkbox" id="check-add" class="w-4 h-4 text-blue-600 mr-3 rounded" checked>
-                        <span class="text-sm font-bold text-slate-700">Add New Jobs</span>
-                    </label>
-                    <label class="flex items-center p-3 bg-slate-50 rounded-xl border-2 border-transparent cursor-pointer hover:border-blue-200 transition-all">
-                        <input type="checkbox" id="check-todo" class="w-4 h-4 text-blue-600 mr-3 rounded" checked>
-                        <span class="text-sm font-bold text-slate-700">Delivery Schedule</span>
-                    </label>
-                    <label class="flex items-center p-3 bg-slate-50 rounded-xl border-2 border-transparent cursor-pointer hover:border-blue-200 transition-all">
-                        <input type="checkbox" id="check-edit" class="w-4 h-4 text-blue-600 mr-3 rounded" checked>
-                        <span class="text-sm font-bold text-slate-700">Edit & Delete</span>
-                    </label>
-                    <label class="flex items-center p-3 bg-slate-50 rounded-xl border-2 border-transparent cursor-pointer hover:border-blue-200 transition-all">
-                        <input type="checkbox" id="check-prod" class="w-4 h-4 text-blue-600 mr-3 rounded" checked>
-                        <span class="text-sm font-bold text-slate-700">Production (+) Log</span>
-                    </label>
-                    <label class="flex items-center p-3 bg-slate-50 rounded-xl border-2 border-transparent cursor-pointer hover:border-blue-200 transition-all">
-                        <input type="checkbox" id="check-search" class="w-4 h-4 text-blue-600 mr-3 rounded">
-                        <span class="text-sm font-bold text-slate-700">Search Filter Access</span>
-                    </label>
-                    <label class="flex items-center p-3 bg-slate-50 rounded-xl border-2 border-transparent cursor-pointer hover:border-blue-200 transition-all">
-                        <input type="checkbox" id="check-copy" class="w-4 h-4 text-blue-600 mr-3 rounded">
-                        <span class="text-sm font-bold text-slate-700">Copy To Clipboard</span>
-                    </label>
-                </div>
-                
-                <!-- Admin Requests Section showing Allowed Users and Pending requests -->
                 <div id="admin-requests-section" class="mt-2 border-slate-200 pt-2">
-                    <h4 class="text-xs font-black text-slate-500 uppercase mb-3">User Access Manager</h4>
-                    <div id="requests-list" class="space-y-2 max-h-[250px] overflow-y-auto pr-1"></div>
-                </div>
-
-                <div class="flex gap-2 pt-2">
-                    <button onclick="lockAll()" class="flex-1 bg-slate-200 text-slate-600 py-4 rounded-xl font-black mt-2 active:scale-95 uppercase tracking-widest text-xs hidden">LOCK</button>
+                    <h4 class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">User Access Manager</h4>
+                    <div id="requests-list" class="space-y-3 max-h-[300px] overflow-y-auto pr-1"></div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- NEW MODAL: User Specific Permissions (ON FEATURE) -->
-    <div id="modal-user-permissions" class="modal z-[1100]">
+    <!-- User Specific Permissions Modal (Modern Toggles) -->
+    <div id="modal-user-permissions" class="modal" style="z-index: 10005;">
         <div class="modal-content">
             <div class="flex justify-between items-center mb-6">
                 <h3 class="font-black text-xl text-slate-800">User Features</h3>
-                <button onclick="closeUserPermsModal()" class="text-slate-400"><i class="fa-solid fa-xmark text-xl"></i></button>
+                <button onclick="closeUserPermsModal()" class="text-slate-400 hover:text-slate-700 transition-colors"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
-            <p id="editing-user-id" class="text-[10px] font-bold text-blue-600 uppercase mb-4 border-b border-slate-100 pb-2"></p>
+            <p id="editing-user-id" class="text-[10px] font-bold text-blue-600 uppercase mb-4 pb-2 border-b border-slate-100"></p>
             
-            <div class="grid grid-cols-1 gap-2 mt-2">
-                <label class="flex items-center p-3 bg-slate-50 rounded-xl border-2 border-transparent cursor-pointer hover:border-blue-200 transition-all">
-                    <input type="checkbox" id="u-check-add" class="w-4 h-4 text-indigo-600 mr-3 rounded">
-                    <span class="text-sm font-bold text-slate-700">Add New Jobs</span>
+            <div class="grid grid-cols-1 gap-2.5 mt-2">
+                <label class="flex items-center justify-between p-3.5 bg-slate-50 rounded-xl border border-slate-100 cursor-pointer hover:border-blue-200 transition-all">
+                    <span class="text-sm font-black text-slate-700">Add New Jobs</span>
+                    <input type="checkbox" id="u-check-add" class="toggle-switch">
                 </label>
-                <label class="flex items-center p-3 bg-slate-50 rounded-xl border-2 border-transparent cursor-pointer hover:border-blue-200 transition-all">
-                    <input type="checkbox" id="u-check-todo" class="w-4 h-4 text-indigo-600 mr-3 rounded">
-                    <span class="text-sm font-bold text-slate-700">Delivery Schedule</span>
+                <label class="flex items-center justify-between p-3.5 bg-slate-50 rounded-xl border border-slate-100 cursor-pointer hover:border-blue-200 transition-all">
+                    <span class="text-sm font-black text-slate-700">Delivery Schedule</span>
+                    <input type="checkbox" id="u-check-todo" class="toggle-switch">
                 </label>
-                <label class="flex items-center p-3 bg-slate-50 rounded-xl border-2 border-transparent cursor-pointer hover:border-blue-200 transition-all">
-                    <input type="checkbox" id="u-check-edit" class="w-4 h-4 text-indigo-600 mr-3 rounded">
-                    <span class="text-sm font-bold text-slate-700">Edit & Delete</span>
+                <label class="flex items-center justify-between p-3.5 bg-slate-50 rounded-xl border border-slate-100 cursor-pointer hover:border-blue-200 transition-all">
+                    <span class="text-sm font-black text-slate-700">Edit & Delete</span>
+                    <input type="checkbox" id="u-check-edit" class="toggle-switch">
                 </label>
-                <label class="flex items-center p-3 bg-slate-50 rounded-xl border-2 border-transparent cursor-pointer hover:border-blue-200 transition-all">
-                    <input type="checkbox" id="u-check-prod" class="w-4 h-4 text-indigo-600 mr-3 rounded">
-                    <span class="text-sm font-bold text-slate-700">Production (+) Log</span>
+                <label class="flex items-center justify-between p-3.5 bg-slate-50 rounded-xl border border-slate-100 cursor-pointer hover:border-blue-200 transition-all">
+                    <span class="text-sm font-black text-slate-700">Production (+) Log</span>
+                    <input type="checkbox" id="u-check-prod" class="toggle-switch">
                 </label>
-                <label class="flex items-center p-3 bg-slate-50 rounded-xl border-2 border-transparent cursor-pointer hover:border-blue-200 transition-all">
-                    <input type="checkbox" id="u-check-search" class="w-4 h-4 text-indigo-600 mr-3 rounded">
-                    <span class="text-sm font-bold text-slate-700">Search Filter Access</span>
+                <label class="flex items-center justify-between p-3.5 bg-slate-50 rounded-xl border border-slate-100 cursor-pointer hover:border-blue-200 transition-all">
+                    <span class="text-sm font-black text-slate-700">Search Filter Access</span>
+                    <input type="checkbox" id="u-check-search" class="toggle-switch">
                 </label>
-                <label class="flex items-center p-3 bg-slate-50 rounded-xl border-2 border-transparent cursor-pointer hover:border-blue-200 transition-all">
-                    <input type="checkbox" id="u-check-copy" class="w-4 h-4 text-indigo-600 mr-3 rounded">
-                    <span class="text-sm font-bold text-slate-700">Copy To Clipboard</span>
+                <label class="flex items-center justify-between p-3.5 bg-slate-50 rounded-xl border border-slate-100 cursor-pointer hover:border-blue-200 transition-all">
+                    <span class="text-sm font-black text-slate-700">Copy To Clipboard</span>
+                    <input type="checkbox" id="u-check-copy" class="toggle-switch">
+                </label>
+                <label class="flex items-center justify-between p-3.5 bg-slate-50 rounded-xl border border-slate-100 cursor-pointer hover:border-blue-200 transition-all">
+                    <span class="text-sm font-black text-slate-700">Multi-Select (Long Press)</span>
+                    <input type="checkbox" id="u-check-select" class="toggle-switch">
+                </label>
+                <label class="flex items-center justify-between p-3.5 bg-slate-50 rounded-xl border border-slate-100 cursor-pointer hover:border-blue-200 transition-all">
+                    <span class="text-sm font-black text-slate-700">Export to CSV</span>
+                    <input type="checkbox" id="u-check-export" class="toggle-switch">
                 </label>
             </div>
-            <button onclick="saveUserPermissions()" class="w-full bg-indigo-600 text-white py-4 rounded-xl font-black mt-4 shadow-xl shadow-indigo-500/30 active:scale-95 uppercase tracking-widest text-xs">ALLOW FEATURE</button>
+            <button onclick="saveUserPermissions()" class="w-full bg-slate-900 text-white py-4 rounded-xl font-black mt-5 shadow-xl shadow-slate-900/20 active:scale-95 uppercase tracking-widest text-xs">SAVE FEATURES</button>
         </div>
     </div>
 
@@ -519,7 +626,11 @@
                             <div id="sheet-status" class="img-loading hidden">...</div>
                         </div>
                     </div>
-                    <button type="button" id="view-sheet-btn" onclick="viewJobImages(currentJobImageData, currentJobArtworkData)" class="w-8 h-8 bg-slate-900 text-white rounded-lg flex items-center justify-center hidden"><i class="fa-solid fa-eye text-xs"></i></button>
+                    <!-- EXTRACT ICON NEXT TO EYE ICON -->
+                    <div class="flex gap-1">
+                        <button type="button" id="extract-sheet-btn" onclick="extractOCR()" class="w-8 h-8 bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center hidden" title="Extract Text"><i class="fa-solid fa-wand-magic-sparkles text-xs"></i></button>
+                        <button type="button" id="view-sheet-btn" onclick="viewJobImages(currentJobImageData, currentJobArtworkData)" class="w-8 h-8 bg-slate-900 text-white rounded-lg flex items-center justify-center hidden"><i class="fa-solid fa-eye text-xs"></i></button>
+                    </div>
                 </div>
                 <div class="image-upload-box">
                     <div class="flex items-center gap-2">
@@ -537,18 +648,26 @@
 
             <form id="job-form" onsubmit="saveJob(event)" class="space-y-3">
                 <input type="hidden" id="edit-id">
+                
                 <div class="p-3 bg-slate-50 rounded-2xl space-y-3 border border-slate-100">
                     <div class="grid grid-cols-2 gap-3">
                         <div class="space-y-1">
-                            <label class="text-[9px] font-black text-slate-500 uppercase ml-1">Job Number</label>
-                            <input type="text" id="job-no" required class="w-full bg-white border-slate-200 border-2 p-2 rounded-xl text-xs font-bold outline-none focus:border-blue-500">
+                            <label class="text-[9px] font-black text-slate-500 uppercase ml-1">Date</label>
+                            <input type="date" id="job-date" class="w-full bg-white border-slate-200 border-2 p-2 rounded-xl text-xs font-bold outline-none focus:border-blue-500">
                         </div>
                         <div class="space-y-1">
-                            <label class="text-[9px] font-black text-slate-500 uppercase ml-1">Customer</label>
-                            <input type="text" id="customer" required class="w-full bg-white border-slate-200 border-2 p-2 rounded-xl text-xs font-bold outline-none focus:border-blue-500">
+                            <label class="text-[9px] font-black text-slate-500 uppercase ml-1">Job Number</label>
+                            <input type="text" id="job-no" required oninput="checkJobNo()" class="w-full bg-white border-slate-200 border-2 p-2 rounded-xl text-xs font-bold outline-none focus:border-blue-500">
+                            <!-- Duplicate Job No Warning -->
+                            <p id="job-no-warning" class="text-[9px] font-black text-red-500 mt-1 uppercase tracking-wider hidden"><i class="fa-solid fa-triangle-exclamation"></i> This order is already available.</p>
                         </div>
                     </div>
+                    <div class="space-y-1">
+                        <label class="text-[9px] font-black text-slate-500 uppercase ml-1">Customer</label>
+                        <input type="text" id="customer" required class="w-full bg-white border-slate-200 border-2 p-2 rounded-xl text-xs font-bold outline-none focus:border-blue-500">
+                    </div>
                 </div>
+
                 <div class="p-3 bg-slate-50 rounded-2xl space-y-3 border border-slate-100">
                     <div class="grid grid-cols-3 gap-3">
                         <div class="space-y-1">
@@ -578,7 +697,7 @@
                     </select>
                     <textarea id="instructions" rows="4" placeholder="Job Instructions..." class="w-full bg-white border-slate-200 border-2 p-2 rounded-xl text-xs font-bold outline-none"></textarea>
                 </div>
-                <button type="submit" id="save-main-btn" class="w-full bg-slate-900 text-white py-4 rounded-xl font-black mt-2 shadow-xl active:scale-95 uppercase tracking-widest text-sm flex items-center justify-center gap-2">
+                <button type="submit" id="save-main-btn" class="w-full bg-slate-900 text-white py-4 rounded-xl font-black mt-2 shadow-xl active:scale-95 uppercase tracking-widest text-sm flex items-center justify-center gap-2 transition-all">
                     <span id="save-btn-label">SAVE JOB</span>
                     <i id="save-spinner" class="fa-solid fa-circle-notch sync-anim hidden"></i>
                 </button>
@@ -589,50 +708,85 @@
     <!-- Production Log Modal -->
     <div id="modal-prod" class="modal">
         <div class="modal-content">
-            <div class="flex justify-between items-center mb-6">
-                <div>
-                    <h3 class="font-black text-xl text-slate-800">Add Production</h3>
-                    <p id="prod-job-info" class="text-[10px] font-bold text-blue-600 uppercase"></p>
+            <div class="flex justify-between items-start mb-6">
+                <div class="flex gap-4 items-center">
+                    <div class="w-12 h-12 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center text-2xl shadow-inner border border-blue-200">
+                        <i class="fa-solid fa-industry"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-black text-xl text-slate-800 tracking-tight">Production Log</h3>
+                        <p id="prod-job-info" class="text-[10px] font-black text-blue-600 uppercase tracking-widest mt-0.5"></p>
+                    </div>
                 </div>
-                <button onclick="closeModals()" class="text-slate-400"><i class="fa-solid fa-xmark text-xl"></i></button>
+                <button onclick="closeModals()" class="text-slate-400 bg-slate-50 w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100 transition-colors"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <div class="bg-slate-50 p-4 rounded-2xl mb-6 border-2 border-slate-100">
-                <div class="grid grid-cols-2 gap-2 mb-3">
-                    <input type="date" id="mtr-date" class="w-full border-2 border-slate-200 p-2.5 rounded-xl text-xs font-bold outline-none">
-                    <input type="number" id="mtr-val" placeholder="Meters" class="w-full border-2 border-slate-200 p-2.5 rounded-xl text-xs font-bold outline-none">
+            
+            <div class="bg-gradient-to-br from-slate-50 to-slate-100 p-5 rounded-3xl mb-6 border border-slate-200 shadow-sm relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-24 h-24 bg-blue-500 rounded-full blur-3xl opacity-10 pointer-events-none"></div>
+                <div class="grid grid-cols-2 gap-3 mb-4 relative z-10">
+                    <div>
+                        <label class="text-[9px] font-black text-slate-500 uppercase ml-1 mb-1 block">Date</label>
+                        <input type="date" id="mtr-date" class="w-full border-2 border-white shadow-sm bg-white p-3 rounded-xl text-sm font-bold outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all">
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-black text-slate-500 uppercase ml-1 mb-1 block">Meters Produced</label>
+                        <input type="number" id="mtr-val" placeholder="0 Mtrs" class="w-full border-2 border-white shadow-sm bg-white p-3 rounded-xl text-sm font-bold outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all">
+                    </div>
                 </div>
-                <button id="prod-upload-btn" onclick="saveProduction()" class="w-full bg-blue-600 text-white py-3.5 rounded-xl font-black shadow-lg uppercase text-xs flex items-center justify-center gap-2">
-                    <span id="prod-btn-label">SAVE ENTRY</span>
+                <button id="prod-upload-btn" onclick="saveProduction()" class="relative z-10 w-full bg-blue-600 text-white py-4 rounded-xl font-black shadow-[0_8px_20px_rgba(37,99,235,0.3)] uppercase tracking-widest text-xs flex items-center justify-center gap-2 active:scale-95 transition-transform">
+                    <span id="prod-btn-label">Save Production Entry</span>
                     <i id="prod-spinner" class="fa-solid fa-circle-notch sync-anim hidden"></i>
                 </button>
             </div>
-            <div id="prod-total-display" class="text-[10px] font-black bg-blue-50 text-blue-600 px-2 py-0.5 rounded mb-2 inline-block">Total: 0 Mtrs</div>
-            <div id="prod-history-list" class="space-y-1 max-h-[250px] overflow-y-auto"></div>
+            
+            <div class="flex justify-between items-end mb-3 px-1 border-b border-slate-100 pb-2">
+                <h4 class="text-xs font-black text-slate-800 uppercase tracking-widest">History</h4>
+                <div id="prod-total-display" class="text-[10px] font-black bg-blue-50 text-blue-600 px-3 py-1 rounded-full border border-blue-100 shadow-sm">Total: 0 Mtrs</div>
+            </div>
+            <div id="prod-history-list" class="space-y-2 max-h-[250px] overflow-y-auto pr-1"></div>
         </div>
     </div>
 
     <!-- Schedule/Todo Modal -->
     <div id="modal-schedule" class="modal">
         <div class="modal-content">
-            <div class="flex justify-between items-center mb-6">
-                <div><h3 class="font-black text-xl text-slate-800">Delivery Schedule</h3><p id="schedule-job-no" class="text-[10px] font-bold text-blue-600 uppercase"></p></div>
-                <button onclick="closeModals()" class="text-slate-400"><i class="fa-solid fa-xmark text-xl"></i></button>
+            <div class="flex justify-between items-start mb-6">
+                <div class="flex gap-4 items-center">
+                    <div class="w-12 h-12 rounded-2xl bg-slate-900 text-white flex items-center justify-center text-xl shadow-lg border border-slate-700">
+                        <i class="fa-solid fa-calendar-check"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-black text-xl text-slate-800 tracking-tight">Delivery Schedule</h3>
+                        <p id="schedule-job-no" class="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-0.5"></p>
+                    </div>
+                </div>
+                <button onclick="closeModals()" class="text-slate-400 bg-slate-50 w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100 transition-colors"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <div class="bg-slate-50 p-4 rounded-2xl mb-6 border-2 border-slate-100">
+            
+            <div class="bg-gradient-to-br from-slate-50 to-slate-100 p-5 rounded-3xl mb-6 border border-slate-200 shadow-sm">
                 <input type="hidden" id="sch-edit-index" value="-1">
-                <div class="grid grid-cols-2 gap-2 mb-3">
-                    <input type="date" id="sch-date" class="w-full p-2 rounded-xl text-xs font-bold border-2 border-slate-200 outline-none">
-                    <input type="number" id="sch-qty" placeholder="Enter Qty" class="w-full p-2 rounded-xl text-xs font-bold border-2 border-slate-200 outline-none">
+                <div class="grid grid-cols-2 gap-3 mb-3">
+                    <div>
+                        <label class="text-[9px] font-black text-slate-500 uppercase ml-1 mb-1 block">Target Date</label>
+                        <input type="date" id="sch-date" class="w-full bg-white p-3 rounded-xl text-sm font-bold border-2 border-white shadow-sm outline-none focus:border-slate-400 transition-all">
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-black text-slate-500 uppercase ml-1 mb-1 block">Bags Quantity</label>
+                        <input type="number" id="sch-qty" placeholder="0 Bags" class="w-full bg-white p-3 rounded-xl text-sm font-bold border-2 border-white shadow-sm outline-none focus:border-slate-400 transition-all">
+                    </div>
                 </div>
-                <div class="mb-3">
-                    <textarea id="sch-note" placeholder="Schedule Instructions / Notes..." rows="2" class="w-full p-2 rounded-xl text-xs font-bold border-2 border-slate-200 outline-none"></textarea>
+                <div class="mb-4">
+                    <label class="text-[9px] font-black text-slate-500 uppercase ml-1 mb-1 block">Instructions / Note</label>
+                    <textarea id="sch-note" placeholder="E.g., Deliver to warehouse A..." rows="2" class="w-full bg-white p-3 rounded-xl text-sm font-bold border-2 border-white shadow-sm outline-none focus:border-slate-400 transition-all"></textarea>
                 </div>
-                <button id="sch-upload-btn" onclick="addScheduleItem()" class="w-full bg-slate-900 text-white py-3 rounded-xl text-[11px] font-black uppercase shadow-lg active:scale-95 flex items-center justify-center gap-2">
+                <button id="sch-upload-btn" onclick="addScheduleItem()" class="w-full bg-slate-900 text-white py-4 rounded-xl text-xs font-black uppercase tracking-widest shadow-[0_8px_20px_rgba(15,23,42,0.3)] active:scale-95 transition-transform flex items-center justify-center gap-2">
                     <span id="sch-btn-label">ADD TO SCHEDULE</span>
                     <i id="sch-spinner" class="fa-solid fa-circle-notch sync-anim hidden"></i>
                 </button>
             </div>
-            <div id="schedule-list" class="space-y-2 overflow-y-auto max-h-[300px]"></div>
+            
+            <h4 class="text-xs font-black text-slate-800 uppercase tracking-widest mb-3 px-1">Planned Deliveries</h4>
+            <div class="timeline-container" id="schedule-list"></div>
         </div>
     </div>
 
@@ -649,12 +803,391 @@
         </div>
     </div>
 
+
+    <!-- ==================== JAVASCRIPT ==================== -->
     <script>
-        const API = "https://script.google.com/macros/s/AKfycbxwVoM6cILilqJsmbKBJwwizZfSwLbMgqHGttITMdz07OZSnwHh-3oqYZHOeffmSKuXXA/exec";
-        
+        // --- NATIVE APP TAB SWITCHING LOGIC ---
+        function switchTab(tabId, element) {
+            document.querySelectorAll('.tab-pane').forEach(tab => tab.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            
+            const activityIcons = document.getElementById('activity-top-icons');
+            
+            if(tabId === 'tab-home') {
+                activityIcons.classList.remove('hidden');
+                activityIcons.classList.add('flex'); 
+            } else {
+                activityIcons.classList.add('hidden');
+                activityIcons.classList.remove('flex');
+                if (isSelectionMode) exitSelectionMode(); // Exit selection if leaving home
+            }
+
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+                const icon = item.querySelector('i');
+                icon.className = icon.className.replace('ph-fill', 'ph');
+            });
+
+            element.classList.add('active');
+            const activeIcon = element.querySelector('i');
+            activeIcon.className = activeIcon.className.replace('ph ', 'ph-fill ');
+
+            // Control Floating Action Button (FAB) visibility
+            const fab = document.getElementById('main-fab');
+            if (tabId === 'tab-home') {
+                const isAdmin = localStorage.getItem('userRole') === 'admin';
+                if (isAdmin || unlockedFeatures.add) {
+                    fab.style.display = 'flex';
+                } else {
+                    fab.style.display = 'none';
+                }
+            } else {
+                fab.style.display = 'none';
+            }
+        }
+
+        // --- PROFILE & AVATAR LOGIC ---
+        let tempProfilePicData = "";
+
+        function handleProfilePicSetup(e) {
+            const file = e.target.files[0];
+            if(!file) return;
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const size = 150; 
+                    canvas.width = size; canvas.height = size;
+                    const ctx = canvas.getContext('2d');
+                    
+                    const scale = Math.max(size / img.width, size / img.height);
+                    const x = (size - img.width * scale) / 2;
+                    const y = (size - img.height * scale) / 2;
+                    ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
+                    
+                    tempProfilePicData = canvas.toDataURL('image/jpeg', 0.7);
+                    document.getElementById('profile-setup-preview').src = tempProfilePicData;
+                    document.getElementById('profile-setup-icon').classList.add('hidden');
+                    document.getElementById('profile-setup-preview').classList.remove('hidden');
+                };
+                img.src = ev.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function renderProfileUI() {
+            const name = localStorage.getItem('userProfileName');
+            const pic = localStorage.getItem('userProfilePic');
+            const setupSec = document.getElementById('profile-setup-section');
+            const dispSec = document.getElementById('profile-display-section');
+            const role = localStorage.getItem('userRole') === 'admin' ? 'Administrator' : (localStorage.getItem('userRole') === 'user_approved' ? 'Approved User' : 'Pending User');
+            
+            const defaultTitle = document.getElementById('default-title');
+            const profileTitle = document.getElementById('profile-title');
+            const appBarName = document.getElementById('app-bar-profile-name');
+            const appBarPic = document.getElementById('app-bar-profile-pic');
+            
+            if(name) {
+                setupSec.classList.add('hidden');
+                dispSec.classList.remove('hidden');
+                document.getElementById('profile-display-name').innerText = name;
+                document.getElementById('profile-role-text').innerText = role;
+                document.getElementById('profile-device-id').innerText = "Device ID: " + getDeviceId();
+                document.getElementById('profile-main-heading').classList.add('hidden');
+                
+                if(pic) {
+                    document.getElementById('profile-large-avatar-img').src = pic;
+                    appBarPic.src = pic;
+                    appBarPic.classList.remove('p-1');
+                } else {
+                    appBarPic.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOTRhM2I4IiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHBhdGggZD0iTTIwIDIxdi0yYTRgNCAwIDAgMC00LTRINThhNCA0IDAgMCAwLTQgNHYyIj48L3BhdGg+PGNpcmNsZSBjeD0iMTIiIGN5PSI3IiByPSI0Ij48L2NpcmNsZT48L3N2Zz4=';
+                    appBarPic.classList.add('p-1');
+                }
+                
+                // Top App Bar Updates (Hide Job Master, Show Profile)
+                defaultTitle.classList.add('hidden');
+                profileTitle.classList.remove('hidden');
+                appBarName.innerText = name;
+                
+            } else {
+                setupSec.classList.remove('hidden');
+                dispSec.classList.add('hidden');
+                document.getElementById('profile-main-heading').classList.remove('hidden');
+                
+                defaultTitle.classList.remove('hidden');
+                profileTitle.classList.add('hidden');
+            }
+        }
+
+        async function saveUserProfile() {
+            const nameInput = document.getElementById('profile-name-input').value.trim();
+            if(!nameInput) { showActionToast("Please enter a valid name", true); return; }
+            
+            localStorage.setItem('userProfileName', nameInput);
+            if (tempProfilePicData) {
+                localStorage.setItem('userProfilePic', tempProfilePicData);
+            }
+            
+            renderProfileUI();
+            showActionToast("Profile Setup Complete!");
+
+            // Attempt to update Admin's record in System Settings
+            let set = getSystemSettings();
+            let req = set.requests.find(r => r.id === getDeviceId());
+            if(req) {
+                req.name = nameInput;
+                try { await saveSystemSettings(set); } catch(e) {}
+            }
+        }
+
+        function editUserProfile() {
+            const currentName = localStorage.getItem('userProfileName') || '';
+            document.getElementById('profile-name-input').value = currentName;
+            
+            const currentPic = localStorage.getItem('userProfilePic');
+            if (currentPic) {
+                tempProfilePicData = currentPic;
+                document.getElementById('profile-setup-preview').src = currentPic;
+                document.getElementById('profile-setup-icon').classList.add('hidden');
+                document.getElementById('profile-setup-preview').classList.remove('hidden');
+            }
+
+            document.getElementById('profile-setup-section').classList.remove('hidden');
+            document.getElementById('profile-display-section').classList.add('hidden');
+            document.getElementById('profile-main-heading').classList.remove('hidden');
+        }
+
+        // --- THEME & MENU LOGIC ---
+        let isDarkMode = localStorage.getItem('theme') === 'dark';
+        if(isDarkMode) applyTheme();
+
+        function toggleDarkMode() {
+            isDarkMode = !isDarkMode;
+            localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+            applyTheme();
+            toggleMenu(); // close menu
+        }
+
+        function applyTheme() {
+            if(isDarkMode) {
+                document.body.classList.add('dark-theme');
+                document.getElementById('theme-text').innerText = 'Light Mode';
+                document.querySelector('#dropdown-menu i.ph-moon')?.classList.replace('ph-moon', 'ph-sun');
+            } else {
+                document.body.classList.remove('dark-theme');
+                document.getElementById('theme-text').innerText = 'Dark Mode';
+                document.querySelector('#dropdown-menu i.ph-sun')?.classList.replace('ph-sun', 'ph-moon');
+            }
+        }
+
+        function toggleMenu() {
+            const menu = document.getElementById('dropdown-menu');
+            if (menu.classList.contains('hidden')) {
+                menu.classList.remove('hidden');
+                menu.classList.add('flex');
+            } else {
+                menu.classList.add('hidden');
+                menu.classList.remove('flex');
+            }
+        }
+
+        function toggleCompletedMenu() {
+            showCompleted = !showCompleted;
+            const icon = document.getElementById('menu-eye-icon');
+            const text = document.getElementById('menu-eye-text');
+            if (showCompleted) { 
+                icon.classList.replace('fa-eye-slash', 'fa-eye');
+                text.innerText = 'Pending Jobs';
+            } else { 
+                icon.classList.replace('fa-eye', 'fa-eye-slash');
+                text.innerText = 'Completed Jobs';
+            }
+            renderJobs();
+            toggleMenu(); 
+        }
+
+        document.addEventListener('click', (e) => {
+            const menu = document.getElementById('dropdown-menu');
+            const btn = document.getElementById('menu-btn');
+            if(menu && !menu.classList.contains('hidden') && !menu.contains(e.target) && !btn.contains(e.target)) {
+                menu.classList.add('hidden');
+                menu.classList.remove('flex');
+            }
+        });
+
+        // --- SORT LOGIC ---
+        let currentSort = 'newest';
+
+        function openSortModal() {
+            document.querySelectorAll('[id^="sort-check-"]').forEach(el => el.classList.add('hidden'));
+            document.getElementById('sort-check-' + currentSort)?.classList.remove('hidden');
+            document.getElementById('modal-sort').style.display = 'flex';
+            toggleMenu();
+        }
+
+        function setSort(type) {
+            currentSort = type;
+            renderJobs();
+            closeModals();
+        }
+
+        function openSettingsModal() {
+            document.getElementById('modal-settings').style.display = 'flex';
+            toggleMenu();
+        }
+
+
+        // --- SELECTION MODE (LONG PRESS) LOGIC ---
+        let isSelectionMode = false;
+        let selectedJobs = new Set();
+        let pressTimer = null;
+        let startY = 0;
+        let longPressTriggered = false;
+        let lastClickTime = 0;
+        let lastClickId = null;
+
+        function handlePointerDown(e, id) {
+            const isAdmin = localStorage.getItem('userRole') === 'admin';
+            if (!isAdmin && !unlockedFeatures.select) return;
+
+            if (isSelectionMode) return;
+            longPressTriggered = false;
+            startY = e.clientY || (e.touches && e.touches[0].clientY) || 0;
+            pressTimer = setTimeout(() => {
+                longPressTriggered = true;
+                isSelectionMode = true;
+                selectedJobs.add(String(id));
+                if(navigator.vibrate) navigator.vibrate(50);
+                renderJobs();
+                updateSelectionBar();
+            }, 600); // 600ms long press
+        }
+
+        function handlePointerMove(e) {
+            if (pressTimer) {
+                let currentY = e.clientY || (e.touches && e.touches[0].clientY) || 0;
+                if (Math.abs(currentY - startY) > 10) {
+                    clearTimeout(pressTimer);
+                    pressTimer = null;
+                }
+            }
+        }
+
+        function handlePointerUp() {
+            if (pressTimer) {
+                clearTimeout(pressTimer);
+                pressTimer = null;
+            }
+        }
+
+        function handleCardClick(e, id, el) {
+            if (longPressTriggered) {
+                longPressTriggered = false;
+                e.preventDefault();
+                e.stopPropagation();
+                return;
+            }
+            if (isSelectionMode) {
+                e.stopPropagation();
+                if (selectedJobs.has(String(id))) {
+                    selectedJobs.delete(String(id));
+                    if (selectedJobs.size === 0) {
+                        exitSelectionMode();
+                        return;
+                    }
+                } else {
+                    selectedJobs.add(String(id));
+                }
+                renderJobs();
+                updateSelectionBar();
+                return;
+            }
+
+            // Custom Double-Tap / Double-Click Detection
+            const currentTime = new Date().getTime();
+            const timeDiff = currentTime - lastClickTime;
+            if (timeDiff < 400 && lastClickId === id) {
+                copyToClipboard(id, el);
+                lastClickTime = 0; // Reset
+            } else {
+                lastClickTime = currentTime;
+                lastClickId = id;
+            }
+        }
+
+        function exitSelectionMode() {
+            isSelectionMode = false;
+            selectedJobs.clear();
+            renderJobs();
+            updateSelectionBar();
+        }
+
+        function updateSelectionBar() {
+            const bar = document.getElementById('selection-bar');
+            if (isSelectionMode) {
+                bar.classList.remove('hidden');
+                document.getElementById('selection-count').innerText = `${selectedJobs.size} Selected`;
+                
+                const isAdmin = localStorage.getItem('userRole') === 'admin';
+                const exportBtn = bar.querySelector('button[title="Export Selected"]');
+                if(exportBtn) exportBtn.style.display = (isAdmin || unlockedFeatures.export) ? 'block' : 'none';
+            } else {
+                bar.classList.add('hidden');
+            }
+        }
+
+        // --- SEARCH VISIBILITY LOGIC ---
+        let isSearchVisible = false;
+
+        function toggleSearchBox() {
+            isSearchVisible = !isSearchVisible;
+            if (!isSearchVisible) {
+                document.getElementById('search').value = ''; 
+            }
+            renderJobs();
+            if (isSearchVisible) {
+                setTimeout(() => document.getElementById('search').focus(), 100);
+            }
+        }
+
+        // --- DUPLICATE JOB NO CHECK ---
+        function checkJobNo() {
+            const val = document.getElementById('job-no').value.trim().toLowerCase();
+            const editId = document.getElementById('edit-id').value || "";
+            const warning = document.getElementById('job-no-warning');
+            const saveBtn = document.getElementById('save-main-btn');
+
+            if (val === "") {
+                warning.classList.add('hidden');
+                saveBtn.disabled = false;
+                saveBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                return false;
+            }
+
+            const isDuplicate = jobs.some(j => {
+                if (j.ID === 'SYSTEM_SETTINGS_V1') return false;
+                if (editId !== "" && String(j.ID) === String(editId)) return false;
+                return String(j.JobNo || '').trim().toLowerCase() === val;
+            });
+            
+            if(isDuplicate) {
+                warning.classList.remove('hidden');
+                saveBtn.disabled = true;
+                saveBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                return true;
+            } else {
+                warning.classList.add('hidden');
+                saveBtn.disabled = false;
+                saveBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                return false;
+            }
+        }
+
+        // --- JOB MASTER CORE LOGIC ---
+        const API = "";
         const APP_LOCK_CODE = "4634"; 
-        const ADMIN_CODE = "4634-78"; 
-        
+        const ADMIN_CODE = "Imei-Sv!"; 
         const LOCAL_STORAGE_KEY = 'job_data_v3';
         
         let jobs = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '[]');
@@ -662,16 +1195,28 @@
         let activeId = null;
         let currentJobImageData = ""; 
         let currentJobArtworkData = ""; 
-        
-        let unlockedFeatures = { add: false, todo: false, edit: false, prod: false, search: false, copy: false };
+        let unlockedFeatures = { add: false, todo: false, edit: false, prod: false, search: false, copy: false, select: false, export: false };
         let pollingInterval = null;
         let editingUserId = null; 
 
-        // TOAST NOTIFICATION FUNCTION
+        // HELPER: Extract Piggybacked Date from Instructions Field
+        function parseJobDetails(j) {
+            let inst = j.Instructions || '';
+            let date = '';
+            if (inst.includes('_@_DATE_@_')) {
+                let parts = inst.split('_@_DATE_@_');
+                inst = parts[0];
+                date = parts[1];
+            }
+            return {
+                text: inst,
+                date: date || j.Date || ''
+            };
+        }
+
         function showActionToast(msg, isError = false) {
             const toast = document.getElementById('action-toast');
             const icon = document.getElementById('action-toast-icon');
-            
             if(isError) {
                 toast.classList.replace('bg-emerald-500', 'bg-red-500');
                 icon.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i>`;
@@ -680,19 +1225,14 @@
                 icon.innerHTML = `<i class="fa-solid fa-circle-check"></i>`;
             }
             document.getElementById('action-toast-msg').innerText = msg;
-            
             toast.classList.remove('opacity-0', 'translate-y-[-20px]');
-            setTimeout(() => {
-                toast.classList.add('opacity-0', 'translate-y-[-20px]');
-            }, 3000);
+            setTimeout(() => { toast.classList.add('opacity-0', 'translate-y-[-20px]'); }, 3000);
         }
 
         window.onload = () => {
             const role = localStorage.getItem('userRole');
-            if (role === 'admin') { 
+            if (role === 'admin' || role === 'user_approved') { 
                 showApp(); 
-            } else if (role === 'user_approved') {
-                showApp();
             } else if (role === 'user_pending') {
                 startApprovalPolling();
             } else { 
@@ -702,28 +1242,30 @@
 
         function getDeviceId() {
             let id = localStorage.getItem('app_device_id');
-            if (!id) {
-                id = 'USER_' + Math.floor(Math.random() * 90000 + 10000); 
-                localStorage.setItem('app_device_id', id);
-            }
+            if (!id) { id = 'USER_' + Math.floor(Math.random() * 90000 + 10000); localStorage.setItem('app_device_id', id); }
             return id;
+        }
+
+        function getCurrentUserDisplayName() {
+            const localName = localStorage.getItem('userProfileName');
+            if(localName) return localName;
+            
+            if (localStorage.getItem('userRole') === 'admin') return 'Admin';
+            let devId = getDeviceId();
+            let set = getSystemSettings();
+            let req = set.requests.find(r => r.id === devId);
+            return (req && req.name && req.name.trim() !== "") ? req.name : devId;
         }
 
         function getSystemSettings() {
             let sys = jobs.find(x => x.ID === 'SYSTEM_SETTINGS_V1');
-            try {
-                return sys ? JSON.parse(sys.Instructions) : { requests: [], permissions: { add: false, todo: false, edit: false, prod: false, search: false, copy: false } };
-            } catch(e) {
-                return { requests: [], permissions: { add: false, todo: false, edit: false, prod: false, search: false, copy: false } };
-            }
+            try { return sys ? JSON.parse(sys.Instructions) : { requests: [], permissions: { add: false, todo: false, edit: false, prod: false, search: false, copy: false, select: false, export: false } }; } 
+            catch(e) { return { requests: [], permissions: { add: false, todo: false, edit: false, prod: false, search: false, copy: false, select: false, export: false } }; }
         }
 
         async function saveSystemSettings(settings) {
             let sys = jobs.find(x => x.ID === 'SYSTEM_SETTINGS_V1');
-            if (!sys) {
-                sys = { ID: 'SYSTEM_SETTINGS_V1', JobNo: 'SYS_000', Customer: 'APP_SETTINGS' };
-                jobs.push(sys);
-            }
+            if (!sys) { sys = { ID: 'SYSTEM_SETTINGS_V1', JobNo: 'SYS_000', Customer: 'APP_SETTINGS' }; jobs.push(sys); }
             sys.Instructions = JSON.stringify(settings);
             await syncData('save', sys);
         }
@@ -731,24 +1273,18 @@
         function updateLocalPermissions() {
             if (localStorage.getItem('userRole') !== 'admin') {
                 let set = getSystemSettings();
-                let myDevId = getDeviceId();
-                let myReq = set.requests.find(r => r.id === myDevId);
+                let myReq = set.requests.find(r => r.id === getDeviceId());
                 
-                if (myReq && myReq.permissions) {
-                    unlockedFeatures = myReq.permissions;
-                } else {
-                    unlockedFeatures = set.permissions;
-                }
+                if (myReq && myReq.permissions) unlockedFeatures = myReq.permissions;
+                else unlockedFeatures = set.permissions;
                 
                 if (localStorage.getItem('userRole') === 'user_approved') {
                     if (!myReq || myReq.status !== 'approved') {
                         localStorage.removeItem('userRole');
-                        document.getElementById('main-app-content').style.display = 'none';
+                        document.getElementById('main-android-app').style.display = 'none';
                         document.getElementById('global-auth-overlay').style.display = 'flex';
-                        
-                        const errMsg = document.getElementById('auth-error-msg');
-                        errMsg.innerText = "Access has been revoked by Admin.";
-                        errMsg.classList.remove('hidden');
+                        document.getElementById('auth-error-msg').innerText = "Access has been revoked by Admin.";
+                        document.getElementById('auth-error-msg').classList.remove('hidden');
                     }
                 }
             }
@@ -758,14 +1294,10 @@
             const val = document.getElementById('global-pass-input').value.trim();
             document.getElementById('auth-error-msg').classList.add('hidden');
             
-            if (val === ADMIN_CODE) { 
-                localStorage.setItem('userRole', 'admin'); 
-                showApp(); 
-            } else if (val === APP_LOCK_CODE) {
-                localStorage.setItem('userRole', 'user_pending');
-                startApprovalPolling();
-            } else { 
-                document.getElementById('auth-error-msg').innerText = "Incorrect code. Please try again.";
+            if (val === ADMIN_CODE) { localStorage.setItem('userRole', 'admin'); showApp(); } 
+            else if (val === APP_LOCK_CODE) { localStorage.setItem('userRole', 'user_pending'); startApprovalPolling(); } 
+            else { 
+                document.getElementById('auth-error-msg').innerText = "Incorrect code. Access Denied.";
                 document.getElementById('auth-error-msg').classList.remove('hidden'); 
             }
         }
@@ -773,19 +1305,16 @@
         async function startApprovalPolling() {
             document.getElementById('global-auth-overlay').style.display = 'none';
             document.getElementById('waiting-overlay').style.display = 'flex';
-            
             await silentPullData();
             
             let set = getSystemSettings();
             let devId = getDeviceId();
             let existingReq = set.requests.find(r => r.id === devId);
+            const myName = localStorage.getItem('userProfileName') || '';
             
             if (!existingReq || existingReq.status !== 'approved') {
-                if (existingReq) {
-                    set.requests = set.requests.filter(r => r.id !== devId);
-                }
-                
-                set.requests.push({ id: devId, status: 'pending', time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) });
+                if (existingReq) set.requests = set.requests.filter(r => r.id !== devId);
+                set.requests.push({ id: devId, name: myName, status: 'pending', time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) });
                 await saveSystemSettings(set);
                 
                 pollingInterval = setInterval(async () => {
@@ -809,23 +1338,22 @@
         function showApp() {
             document.getElementById('global-auth-overlay').style.display = 'none';
             document.getElementById('waiting-overlay').style.display = 'none';
-            document.getElementById('main-app-content').style.display = 'block';
+            
+            document.getElementById('main-android-app').style.display = 'flex';
             
             updateLocalPermissions();
+            renderProfileUI();
             renderJobs(); 
             pullData(); 
             
             if(!window.liveSyncInterval) {
                 window.liveSyncInterval = setInterval(() => {
-                    silentPullData().then(() => {
-                        updateLocalPermissions();
-                        renderJobs();
-                    });
+                    silentPullData().then(() => { updateLocalPermissions(); renderJobs(); });
                 }, 10000);
             }
         }
 
-        function handleEyeDoubleClick() {
+        function openAdminControls() {
             if (localStorage.getItem('userRole') === 'admin') {
                 let set = getSystemSettings();
                 renderAdminRequestsList(set);
@@ -833,24 +1361,43 @@
             }
         }
         
+        async function updateUserName(id, name) {
+            let set = getSystemSettings();
+            let req = set.requests.find(r => r.id === id);
+            if (req) {
+                req.name = name;
+                try { 
+                    await saveSystemSettings(set); 
+                    showActionToast("User Name Saved!"); 
+                } catch(e) {
+                    showActionToast("Error saving name", true);
+                }
+            }
+        }
+
         function renderAdminRequestsList(set) {
             const list = document.getElementById('requests-list');
             const visibleReqs = set.requests.filter(r => r.status === 'pending' || r.status === 'approved');
-            
-            if(visibleReqs.length === 0) {
-                list.innerHTML = `<p class="text-[10px] text-slate-400 font-bold uppercase py-2">No users or requests.</p>`;
-            } else {
+            if(visibleReqs.length === 0) list.innerHTML = `<p class="text-[10px] text-slate-400 font-bold uppercase py-2">No users or requests.</p>`;
+            else {
                 list.innerHTML = visibleReqs.map(r => `
-                    <div class="flex justify-between items-center bg-white p-3 rounded-xl border border-slate-200 mb-2 gap-2">
-                        <span class="text-xs font-black text-slate-700 truncate flex-1">${r.id} <span class="block text-[9px] ${r.status === 'approved' ? 'text-emerald-500' : 'text-amber-500'} font-bold mt-0.5">${r.status.toUpperCase()} - ${r.time}</span></span>
-                        ${r.status === 'pending' ? 
-                        `<button type="button" onclick="approveUserAccess('${r.id}')" class="bg-blue-600 text-white h-8 px-4 rounded-lg text-[10px] font-black tracking-widest uppercase shadow active:scale-95 shrink-0 flex items-center justify-center">ALLOW</button>` :
-                        `<!-- Aligned Buttons for ON FEATURE & DISALLOW -->
-                        <div class="flex gap-1.5 shrink-0 items-center h-8">
-                            <button type="button" onclick="openUserFeatures('${r.id}')" class="h-full bg-indigo-500 text-white px-3 rounded-lg text-[9px] font-black tracking-widest uppercase shadow active:scale-95 flex items-center gap-1.5" title="User Features"><i class="fa-solid fa-sliders"></i> ON FEATURE</button>
-                            <button type="button" onclick="disallowUserAccess('${r.id}')" class="h-full w-8 bg-red-500 text-white rounded-lg text-xs shadow active:scale-95 flex items-center justify-center" title="Block User"><i class="fa-solid fa-ban"></i></button>
-                        </div>`
-                        }
+                    <div class="flex flex-col bg-slate-50 p-4 rounded-2xl border border-slate-100 shadow-sm relative overflow-hidden">
+                        ${r.status === 'approved' ? '<div class="absolute top-0 left-0 w-1 h-full bg-emerald-500"></div>' : '<div class="absolute top-0 left-0 w-1 h-full bg-amber-500"></div>'}
+                        <div class="flex justify-between items-start w-full">
+                            <div class="flex-1 w-full pl-1">
+                                <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">${r.id}</span>
+                                <input type="text" value="${r.name || ''}" placeholder="User Display Name..." onchange="updateUserName('${r.id}', this.value)" class="block w-[95%] text-sm font-black text-slate-800 bg-transparent border-b-2 border-slate-200 outline-none mt-1 mb-2 focus:border-blue-500 placeholder-slate-300 transition-colors py-1">
+                                <span class="block text-[9px] ${r.status === 'approved' ? 'text-emerald-500' : 'text-amber-500'} font-black tracking-widest uppercase"><i class="fa-regular fa-clock"></i> ${r.status} - ${r.time}</span>
+                            </div>
+                        </div>
+                        <div class="flex w-full mt-3 gap-2 pl-1">
+                            ${r.status === 'pending' ? 
+                            `<button type="button" onclick="approveUserAccess('${r.id}')" class="flex-1 bg-blue-600 text-white py-2 rounded-xl text-[10px] font-black tracking-widest uppercase shadow active:scale-95 flex items-center justify-center gap-1.5"><i class="fa-solid fa-check"></i> ALLOW ACCESS</button>
+                             <button type="button" onclick="disallowUserAccess('${r.id}')" class="w-10 bg-slate-200 text-slate-500 rounded-xl text-[10px] active:scale-95 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>` :
+                            `<button type="button" onclick="openUserFeatures('${r.id}')" class="flex-1 bg-indigo-500 text-white py-2 rounded-xl text-[10px] font-black tracking-widest uppercase shadow active:scale-95 flex items-center justify-center gap-1.5"><i class="fa-solid fa-sliders"></i> CONFIGURE PERMISSIONS</button>
+                            <button type="button" onclick="disallowUserAccess('${r.id}')" class="w-10 bg-red-100 text-red-500 rounded-xl active:scale-95 flex items-center justify-center"><i class="fa-solid fa-ban"></i></button>`
+                            }
+                        </div>
                     </div>
                 `).join('');
             }
@@ -861,18 +1408,9 @@
             let req = set.requests.find(r => r.id === id);
             if (req) {
                 req.status = 'approved';
-                if (!req.permissions) {
-                    req.permissions = JSON.parse(JSON.stringify(set.permissions));
-                }
-                
-                // INSTANT UI UPDATE
-                renderAdminRequestsList(set);
-                renderJobs(); 
-                showActionToast("User Allowed Successfully!");
-                
-                try {
-                    await saveSystemSettings(set);
-                } catch(e) { console.error(e); }
+                if (!req.permissions) req.permissions = JSON.parse(JSON.stringify(set.permissions));
+                renderAdminRequestsList(set); renderJobs(); showActionToast("User Allowed Successfully!");
+                try { await saveSystemSettings(set); } catch(e) {}
             }
         }
 
@@ -881,48 +1419,35 @@
             let req = set.requests.find(r => r.id === id);
             if (req) {
                 req.status = 'revoked';
-                
-                // INSTANT UI UPDATE
-                renderAdminRequestsList(set);
-                renderJobs(); 
-                showActionToast("User Disallowed Successfully!", true);
-                
-                try {
-                    await saveSystemSettings(set);
-                } catch(e) { console.error(e); }
+                renderAdminRequestsList(set); renderJobs(); showActionToast("User Access Revoked!", true);
+                try { await saveSystemSettings(set); } catch(e) {}
             }
         }
         
         function openUserFeatures(userId) {
             editingUserId = userId;
             document.getElementById('editing-user-id').innerText = "Settings for: " + userId;
-            
-            let set = getSystemSettings();
-            let req = set.requests.find(r => r.id === userId);
-            
-            let perms = req.permissions || { add: false, todo: false, edit: false, prod: false, search: false, copy: false };
+            let req = getSystemSettings().requests.find(r => r.id === userId);
+            let perms = req.permissions || { add: false, todo: false, edit: false, prod: false, search: false, copy: false, select: false, export: false };
 
-            document.getElementById('u-check-add').checked = perms.add;
-            document.getElementById('u-check-todo').checked = perms.todo;
-            document.getElementById('u-check-edit').checked = perms.edit;
-            document.getElementById('u-check-prod').checked = perms.prod;
-            document.getElementById('u-check-search').checked = perms.search;
-            document.getElementById('u-check-copy').checked = perms.copy;
-
+            document.getElementById('u-check-add').checked = perms.add || false;
+            document.getElementById('u-check-todo').checked = perms.todo || false;
+            document.getElementById('u-check-edit').checked = perms.edit || false;
+            document.getElementById('u-check-prod').checked = perms.prod || false;
+            document.getElementById('u-check-search').checked = perms.search || false;
+            document.getElementById('u-check-copy').checked = perms.copy || false;
+            document.getElementById('u-check-select').checked = perms.select || false;
+            document.getElementById('u-check-export').checked = perms.export || false;
+            
             document.getElementById('modal-user-permissions').style.display = 'flex';
         }
 
-        function closeUserPermsModal() {
-            document.getElementById('modal-user-permissions').style.display = 'none';
-            editingUserId = null;
-        }
+        function closeUserPermsModal() { document.getElementById('modal-user-permissions').style.display = 'none'; editingUserId = null; }
 
         async function saveUserPermissions() {
             if (!editingUserId) return;
-            
             let set = getSystemSettings();
             let req = set.requests.find(r => r.id === editingUserId);
-            
             if (req) {
                 req.permissions = {
                     add: document.getElementById('u-check-add').checked,
@@ -930,77 +1455,190 @@
                     edit: document.getElementById('u-check-edit').checked,
                     prod: document.getElementById('u-check-prod').checked,
                     search: document.getElementById('u-check-search').checked,
-                    copy: document.getElementById('u-check-copy').checked
+                    copy: document.getElementById('u-check-copy').checked,
+                    select: document.getElementById('u-check-select').checked,
+                    export: document.getElementById('u-check-export').checked
                 };
+                closeUserPermsModal(); showActionToast("Features Saved Successfully!");
+                try { await saveSystemSettings(set); } catch(e) {}
                 
-                // INSTANT UI UPDATE (Hide Modal Immediately)
-                closeUserPermsModal();
-                showActionToast("Features Allowed Successfully!");
-                
-                try {
-                    await saveSystemSettings(set);
-                } catch(e) { console.error(e); }
+                const activeTabId = document.querySelector('.tab-pane.active').id;
+                if(activeTabId === 'tab-home' && localStorage.getItem('userRole') !== 'admin') {
+                     document.getElementById('main-fab').style.display = req.permissions.add ? 'flex' : 'none';
+                }
             }
         }
 
-        function formatNum(num) { 
-            return Number(num || 0).toLocaleString('en-US'); 
-        }
+        function formatNum(num) { return Number(num || 0).toLocaleString('en-US'); }
 
         function copyToClipboard(id, el) {
+            if (isSelectionMode) return;
             const isAdmin = localStorage.getItem('userRole') === 'admin';
-            if (!isAdmin && !unlockedFeatures.copy) return;
+            if (!isAdmin && !unlockedFeatures.copy) {
+                showActionToast("Copy feature not allowed!", true);
+                return;
+            }
             
             const j = jobs.find(x => x.ID == id);
             if (!j) return;
+            
+            const details = parseJobDetails(j);
+            const jobDate = details.date;
+            const instText = details.text;
+
             const { done, req, pct } = calculateJobStatus(j);
             const printingTypes = { 'plain': 'Plain', 'single': 'Single Side', 'both': 'Both Side' };
             const printType = printingTypes[j.Printing] || 'Plain';
+            
             let logs = []; try { logs = JSON.parse(j.ProductionLogs || '[]'); } catch(e) {}
             const prodDetail = logs.length > 0 ? logs.map(l => `  • ${l.date}: ${l.meters} Mtrs`).join('\n') : "  No production entries yet.";
+            
             let schedules = []; try { schedules = JSON.parse(j.Schedule || '[]'); } catch(e) {}
             const schDetail = schedules.length > 0 ? schedules.map(s => `  • ${s.date ? s.date : 'ASAP'}: ${s.qty ? formatNum(s.qty) + ' Bags' : '0 Bags'} [${s.done ? 'DONE' : 'PENDING'}]${s.note ? '\n    Note: ' + s.note : ''}`).join('\n') : "  No schedule items.";
-            const textToCopy = `📦 JOB MASTER REPORT - #${j.JobNo}\n----------------------------------\n👤 CUSTOMER DETAILS:\n   Name: ${j.Customer}\n   Qty: ${formatNum(j.BagsQty)} Bags\n   Size: ${j.Size || 'N/A'}\n   GSM: ${j.GSM || 'N/A'}\n   Color: ${j.Color || 'N/A'}\n\n🛠️ SPECIFICATIONS:\n   Cut Length: ${j.CutLength} cm\n   Stock: ${formatNum(j.Stock || 0)} Mtrs\n   Printing: ${printType}\n\n📝 OTHER INSTRUCTIONS:\n   ${j.Instructions || "No special instructions."}\n\n📅 DELIVERY SCHEDULE (TO-DO):\n${schDetail}\n\n⚙️ PRODUCTION DETAILS:\n   Total Required: ${formatNum(req)} Mtrs\n   Total Produced: ${formatNum(Math.floor(done))} Mtrs\n   Progress: ${pct}%\n   Remaining: ${formatNum(Math.max(0, req - done))} Mtrs\n${prodDetail}\n\n----------------------------------\nShared via Job Master Pro App`;
+            
+            const textToCopy = `📋 *JOB SUMMARY: #${j.JobNo}*
+📅 *Date:* ${jobDate ? new Date(jobDate).toLocaleDateString('en-GB') : 'N/A'}
+=========================
+👤 *CUSTOMER:* ${j.Customer}
+🛍️ *Quantity:* ${formatNum(j.BagsQty)} Bags
+📐 *Size:* ${j.Size || 'N/A'} | *GSM:* ${j.GSM || 'N/A'}
+🎨 *Color:* ${j.Color || 'N/A'}
+
+🛠️ *SPECIFICATIONS*
+• Cut Length: ${j.CutLength} cm
+• Printing: ${printType}
+• Available Stock: ${formatNum(j.Stock || 0)} Mtrs
+
+📝 *INSTRUCTIONS*
+${instText || "None"}
+
+🚚 *DELIVERY SCHEDULE*
+${schDetail}
+
+⚙️ *PRODUCTION PROGRESS*
+• Target: ${formatNum(req)} Mtrs
+• Completed: ${formatNum(Math.floor(done))} Mtrs (${pct}%)
+• Remaining: ${formatNum(Math.max(0, req - done))} Mtrs
+=========================`;
             
             const textArea = document.createElement("textarea");
             textArea.value = textToCopy;
+            textArea.style.position = "fixed"; 
+            textArea.style.left = "-999999px";
+            textArea.style.top = "-999999px";
             document.body.appendChild(textArea);
-            textArea.select();
-            document.execCommand('copy');
-            document.body.removeChild(textArea);
-
-            const toast = el.querySelector('.copy-toast');
-            if (toast) {
-                toast.classList.add('show');
-                setTimeout(() => toast.classList.remove('show'), 1800);
+            
+            textArea.focus();
+            textArea.select(); 
+            
+            try {
+                document.execCommand('copy');
+                const toast = el.querySelector('.copy-toast');
+                if (toast) { toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 1800); }
+                showActionToast("Data Copied to Clipboard!");
+            } catch (err) {
+                showActionToast("Failed to copy!", true);
             }
+            
+            document.body.removeChild(textArea);
+        }
+
+        async function extractOCR() {
+            if (!currentJobImageData || currentJobImageData === "[]") { showActionToast("Kripya pehle Job Sheet image upload karein!", true); return; }
+            const apiKey = "AIzaSyC5-_omGjbbrjQCUcmR2yJK7MP-WnSjEnI"; 
+            if (apiKey === "" || apiKey.trim() === "") { showActionToast("Kripya code mein apna Google API Key dalein!", true); return; }
+
+            const btn = document.getElementById('extract-sheet-btn'); const originalIcon = btn.innerHTML;
+            btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-circle-notch sync-anim text-xs"></i>';
+
+            try {
+                const base64Data = currentJobImageData.split(',')[1]; const mimeType = currentJobImageData.split(';')[0].split(':')[1];
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+                const promptText = `Analyze the provided job sheet image and extract the following details accurately. 
+                Return ONLY a JSON object with these exact keys (no markdown formatting, just raw JSON):
+                {
+                    "Date": "string (extract date in YYYY-MM-DD format if available, otherwise empty string)",
+                    "JobNo": "string (extract job number)",
+                    "Customer": "string (extract customer or client name)",
+                    "BagsQty": "string (extract ONLY the numeric quantity of bags, remove words)",
+                    "CutLength": "string (extract number for cut length, ignore ± tolerances)",
+                    "Size": "string (extract size, ignore ± tolerances)",
+                    "GSM": "string (extract GSM number, ignore ± tolerances)",
+                    "Color": "string (extract fabric color or shade)",
+                    "Printing": "string (return strictly 'plain', 'single', or 'both' based on text)",
+                    "Instructions": "string (extract ONLY 'Dealer Name: [name]' and 'Type of Bags: [type]' if present, separate by newline)"
+                }
+                If a field is not found, leave its value as an empty string "".`;
+
+                const payload = { contents: [{ parts: [{ text: promptText }, { inlineData: { mimeType: mimeType, data: base64Data } }] }], generationConfig: { temperature: 0.1, responseMimeType: "application/json" } };
+                const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                if (!response.ok) throw new Error("API Request Failed");
+
+                const result = await response.json();
+                let extractedText = result.candidates[0].content.parts[0].text;
+                const data = JSON.parse(extractedText);
+                let filledAny = false;
+
+                if(data.Date) { document.getElementById('job-date').value = data.Date; filledAny = true; }
+                if(data.JobNo) { document.getElementById('job-no').value = data.JobNo; filledAny = true; }
+                if(data.Customer) { document.getElementById('customer').value = data.Customer; filledAny = true; }
+                if(data.BagsQty) { document.getElementById('bags').value = data.BagsQty.replace(/[^0-9]/g, ''); filledAny = true; }
+                if(data.CutLength) { document.getElementById('cut').value = data.CutLength.replace(/[^0-9\.]/g, ''); filledAny = true; }
+                if(data.Size) { document.getElementById('size').value = data.Size; filledAny = true; }
+                if(data.GSM) { document.getElementById('gsm').value = data.GSM.replace(/[^0-9\.]/g, ''); filledAny = true; }
+                if(data.Color) { document.getElementById('color').value = data.Color; filledAny = true; }
+                if(data.Printing && ['plain', 'single', 'both'].includes(data.Printing.toLowerCase())) { document.getElementById('printing').value = data.Printing.toLowerCase(); if(data.Printing.toLowerCase() !== 'plain') filledAny = true; }
+                if(data.Instructions) {
+                    const currentInst = document.getElementById('instructions').value;
+                    if(!currentInst.includes(data.Instructions)) { document.getElementById('instructions').value = currentInst ? currentInst + '\n' + data.Instructions : data.Instructions; filledAny = true; }
+                }
+                if (filledAny) showActionToast("Data Extracted Successfully!"); else showActionToast("Data nahi mila. Image clear upload karein.", true);
+                
+                checkJobNo(); // re-verify duplication after extraction
+            } catch (err) { console.error(err); showActionToast("Extraction fail ho gaya. API Key check karein.", true); } 
+            finally { btn.disabled = false; btn.innerHTML = originalIcon; }
         }
 
         function handleImageUpload(event, type) {
             const file = event.target.files[0];
             const statusLabel = document.getElementById(type === 'sheet' ? 'sheet-status' : 'artwork-status');
+            const saveBtn = document.getElementById('save-main-btn');
+            const labelSpan = document.getElementById('save-btn-label');
+            
             if (file) {
                 statusLabel.classList.remove('hidden');
+                
+                saveBtn.disabled = true;
+                if (labelSpan) labelSpan.innerText = "PROCESSING...";
+                
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     const img = new Image();
                     img.onload = function() {
                         const canvas = document.createElement('canvas');
-                        let width = img.width, height = img.height, maxDim = 800;
-                        if (width > height) { if (width > maxDim) { height *= maxDim / width; width = maxDim; } }
-                        else { if (height > maxDim) { width *= maxDim / height; height = maxDim; } }
-                        canvas.width = width; canvas.height = height;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, width, height);
-                        const base64 = canvas.toDataURL('image/jpeg', 0.6);
+                        
+                        let width = img.width, height = img.height, maxDim = 600; 
+                        if (width > height) { if (width > maxDim) { height *= maxDim / width; width = maxDim; } } else { if (height > maxDim) { width *= maxDim / height; height = maxDim; } }
+                        canvas.width = width; canvas.height = height; canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+                        
+                        const base64 = canvas.toDataURL('image/jpeg', 0.6); 
+                        
                         if(type === 'sheet') { 
                             currentJobImageData = base64; 
                             document.getElementById('view-sheet-btn').classList.remove('hidden'); 
-                        } else { 
+                            document.getElementById('extract-sheet-btn').classList.remove('hidden'); 
+                        } 
+                        else { 
                             currentJobArtworkData = base64; 
                             document.getElementById('view-artwork-btn').classList.remove('hidden'); 
                         }
+                        
                         statusLabel.classList.add('hidden');
+                        
+                        saveBtn.disabled = false;
+                        if (labelSpan) labelSpan.innerText = "SAVE JOB";
+                        
+                        checkJobNo(); // re-verify duplication in case validation was blocking
                     };
                     img.src = e.target.result;
                 };
@@ -1009,38 +1647,31 @@
         }
 
         function viewJobImages(sheetData, artworkData) {
+            if (isSelectionMode) return;
             const modal = document.getElementById('image-viewer-modal');
             const sheetCard = document.getElementById('sheet-preview-card');
             const artworkCard = document.getElementById('artwork-preview-card');
             const noMsg = document.getElementById('no-image-msg');
             sheetCard.classList.add('hidden'); artworkCard.classList.add('hidden'); noMsg.classList.add('hidden');
             let hasAny = false;
-            if (sheetData && sheetData.length > 50) { 
-                document.getElementById('full-sheet-img').src = sheetData; 
-                sheetCard.classList.remove('hidden'); 
-                hasAny = true; 
-            }
-            if (artworkData && artworkData.length > 50) { 
-                document.getElementById('full-artwork-img').src = artworkData; 
-                artworkCard.classList.remove('hidden'); 
-                hasAny = true; 
-            }
+            if (sheetData && sheetData !== '[]' && sheetData.length > 50) { document.getElementById('full-sheet-img').src = sheetData; sheetCard.classList.remove('hidden'); hasAny = true; }
+            if (artworkData && artworkData !== '[]' && artworkData.length > 50) { document.getElementById('full-artwork-img').src = artworkData; artworkCard.classList.remove('hidden'); hasAny = true; }
             if (!hasAny) noMsg.classList.remove('hidden');
-            modal.style.display = 'flex'; 
-            modal.scrollTo(0,0);
+            modal.style.display = 'flex'; modal.scrollTo(0,0);
         }
 
-        function toggleCompleted() {
-            showCompleted = !showCompleted;
-            const btn = document.getElementById('toggle-complete-btn'), icon = document.getElementById('eye-icon');
-            if (showCompleted) { 
-                btn.classList.add('toggle-active'); 
-                icon.classList.replace('fa-eye-slash', 'fa-eye'); 
-            } else { 
-                btn.classList.remove('toggle-active'); 
-                icon.classList.replace('fa-eye', 'fa-eye-slash'); 
+        function toggleActions(id) {
+            const actionsDiv = document.getElementById(`actions-${id}`);
+            const chevron = document.getElementById(`chevron-${id}`);
+            if (actionsDiv.classList.contains('hidden')) {
+                actionsDiv.classList.remove('hidden');
+                actionsDiv.classList.add('flex');
+                chevron.classList.add('rotate-180');
+            } else {
+                actionsDiv.classList.add('hidden');
+                actionsDiv.classList.remove('flex');
+                chevron.classList.remove('rotate-180');
             }
-            renderJobs();
         }
 
         function calculateJobStatus(j) {
@@ -1055,41 +1686,55 @@
         function renderJobs() {
             const list = document.getElementById('list');
             const q = document.getElementById('search').value.toLowerCase();
-            if (!list) return;
-            list.innerHTML = '';
             
             const isAdmin = localStorage.getItem('userRole') === 'admin';
+            const renderFeatures = isAdmin ? { add: true, todo: true, edit: true, prod: true, search: true, copy: true, select: true, export: true } : unlockedFeatures;
+            const hasActions = renderFeatures.prod || renderFeatures.todo || renderFeatures.edit;
             
-            const renderFeatures = isAdmin ? { add: true, todo: true, edit: true, prod: true, search: true, copy: true } : unlockedFeatures;
+            const searchBtn = document.getElementById('toggle-search-btn');
+            if (searchBtn) searchBtn.style.display = renderFeatures.search ? 'flex' : 'none';
+            document.getElementById('admin-search-container').style.display = (renderFeatures.search && isSearchVisible) ? 'block' : 'none';
             
-            document.getElementById('admin-search-container').style.display = renderFeatures.search ? 'block' : 'none';
-            document.getElementById('new-job-btn').style.display = renderFeatures.add ? 'block' : 'none';
+            const exportMenuBtn = document.getElementById('export-menu-item');
+            if(exportMenuBtn) exportMenuBtn.style.display = (isAdmin || unlockedFeatures.export) ? 'flex' : 'none'; 
+            
+            const activeTabId = document.querySelector('.tab-pane.active')?.id;
+            if(activeTabId === 'tab-home') {
+                 document.getElementById('main-fab').style.display = (renderFeatures.add && !isSelectionMode) ? 'flex' : 'none';
+            }
 
-            // Fixed Admin Eye Icon Notification Badge Logic
             if (isAdmin) {
                 let set = getSystemSettings();
                 let pendingCount = set.requests.filter(r => r.status === 'pending').length;
                 const reqBadge = document.getElementById('admin-req-badge');
-                if (reqBadge) {
-                    reqBadge.innerText = pendingCount;
-                    if(pendingCount > 0) {
-                        reqBadge.classList.remove('hidden');
-                    } else {
-                        reqBadge.classList.add('hidden');
-                    }
-                }
+                if (reqBadge) { reqBadge.innerText = pendingCount; reqBadge.classList.toggle('hidden', pendingCount === 0); }
+                document.getElementById('profile-admin-section').classList.remove('hidden');
+            } else {
+                document.getElementById('profile-admin-section').classList.add('hidden');
+                const reqBadge = document.getElementById('admin-req-badge');
+                if (reqBadge) reqBadge.classList.add('hidden');
             }
+
+            if (!list) return;
+            list.innerHTML = '';
 
             window._jobImages = {};
 
-            const filtered = jobs.filter(j => {
+            let filtered = jobs.filter(j => {
                 if(j.ID === 'SYSTEM_SETTINGS_V1') return false;
-                
                 const status = calculateJobStatus(j);
+                if (showCompleted && !status.isComplete) return false;
                 if (!showCompleted && status.isComplete) return false;
-                const searchString = [j.JobNo, j.Customer, j.Size, j.GSM, j.Color, j.CutLength + "cm"].join(" ").toLowerCase();
-                return searchString.includes(q);
+                
+                const details = parseJobDetails(j);
+                return [details.date, j.JobNo, j.Customer, j.Size, j.GSM, j.Color, j.CutLength + "cm"].join(" ").toLowerCase().includes(q);
             });
+
+            if (currentSort === 'oldest') {
+                filtered.reverse(); 
+            } else if (currentSort === 'customer_asc') {
+                filtered.sort((a,b) => (a.Customer || '').localeCompare(b.Customer || ''));
+            }
 
             filtered.forEach(j => {
                 const { done, req, pct, isComplete } = calculateJobStatus(j);
@@ -1100,35 +1745,49 @@
                 const scheduleHtml = schedules.map(s => {
                     const formattedDate = s.date ? new Date(s.date).toLocaleDateString('en-GB', {day:'2-digit', month:'short'}) : '';
                     const displayQty = s.qty ? formatNum(s.qty) + ' Bags' : '';
-                    
                     if(!formattedDate && !displayQty && !s.note) return '';
-
-                    return `
-                    <div class="todo-item-inline ${s.done ? 'done' : ''}">
-                        <i class="fa-solid ${s.done ? 'fa-circle-check text-emerald-500' : 'fa-circle text-slate-300'} shrink-0"></i>
-                        <div class="todo-text-content">
-                            <span>${formattedDate ? formattedDate + ': ' : ''}${displayQty}</span>
-                            ${s.note ? `<span class="todo-note-text">(${s.note})</span>` : ''}
-                        </div>
-                    </div>`;
+                    return `<div class="todo-item-inline ${s.done ? 'done' : ''}"><i class="fa-solid ${s.done ? 'fa-circle-check text-emerald-500' : 'fa-circle text-slate-300'} shrink-0"></i><div class="todo-text-content"><span>${formattedDate ? formattedDate + ': ' : ''}${displayQty}</span>${s.note ? `<span class="todo-note-text">(${s.note})</span>` : ''}</div></div>`;
                 }).join('');
                 
-                window._jobImages[j.ID] = { sheet: j.ImageData || "", artwork: j.ArtworkData || "" };
+                window._jobImages[j.ID] = { 
+                    sheet: (j.ImageData === '[]' ? '' : j.ImageData) || "", 
+                    artwork: (j.ArtworkData === '[]' ? '' : j.ArtworkData) || "" 
+                };
+
+                const details = parseJobDetails(j);
+                const jobDate = details.date;
+                const instText = details.text;
 
                 const card = document.createElement('div');
-                card.className = 'job-card';
-                card.id = `job-card-${j.ID}`;
-                card.setAttribute('ondblclick', `copyToClipboard('${j.ID}', this)`);
+                const isSelected = selectedJobs.has(String(j.ID));
+                card.className = `job-card ${isSelected ? 'selected-card' : ''}`; 
+                card.id = `job-card-${j.ID}`; 
+                card.setAttribute('onpointerdown', `handlePointerDown(event, '${j.ID}')`);
+                card.setAttribute('onpointerup', `handlePointerUp()`);
+                card.setAttribute('onpointercancel', `handlePointerUp()`);
+                card.setAttribute('onpointerleave', `handlePointerUp()`);
+                card.setAttribute('onpointermove', `handlePointerMove(event)`);
+                card.setAttribute('onclick', `handleCardClick(event, '${j.ID}', this)`);
                 
                 card.innerHTML = `
                     <div class="copy-toast">COPIED!</div>
+                    
+                    ${isSelectionMode ? `
+                    <div class="absolute top-4 right-4 z-20 pointer-events-none">
+                        <div class="w-6 h-6 rounded-md border-2 flex items-center justify-center ${isSelected ? 'bg-blue-600 border-blue-600 text-white shadow-md' : 'border-slate-300 bg-white dark:bg-slate-800 dark:border-slate-500'}">
+                            ${isSelected ? '<i class="fa-solid fa-check text-xs"></i>' : ''}
+                        </div>
+                    </div>
+                    ` : ''}
+
                     <div class="flex justify-between items-start gap-3">
                         <div class="flex-1 min-w-0">
-                            <div class="flex items-center gap-2 mb-2">
-                                <span class="text-[10px] font-black bg-slate-900 text-white px-2 py-0.5 rounded"># ${j.JobNo}</span>
-                                <span class="status-badge ${isComplete ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}">${isComplete ? 'COMPLETE' : 'PENDING'}</span>
+                            <div class="flex items-center flex-wrap gap-2 mb-2">
+                                <span class="text-[10px] font-black bg-slate-900 text-white px-2 py-0.5 rounded shadow-sm"># ${j.JobNo}</span>
+                                <span class="status-badge ${isComplete ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'} shadow-sm">${isComplete ? 'COMPLETE' : 'PENDING'}</span>
+                                ${jobDate ? `<span class="text-[10px] font-bold text-slate-500 ml-auto flex items-center gap-1"><i class="fa-regular fa-calendar text-slate-400"></i>${new Date(jobDate).toLocaleDateString('en-GB', {day:'2-digit', month:'short', year:'numeric'})}</span>` : ''}
                             </div>
-                            <h2 onclick="viewJobImages(window._jobImages['${j.ID}'].sheet, window._jobImages['${j.ID}'].artwork)" class="text-xl font-black text-slate-800 uppercase mb-2 hover:text-blue-600 transition-colors break-words leading-tight cursor-pointer">${j.Customer}</h2>
+                            <h2 onclick="viewJobImages(window._jobImages['${j.ID}'].sheet, window._jobImages['${j.ID}'].artwork)" class="text-xl font-black text-slate-800 uppercase mb-2 hover:text-blue-600 transition-colors break-words leading-tight ${!isSelectionMode ? 'cursor-pointer' : ''}">${j.Customer}</h2>
                             <div class="flex flex-col">
                                 <div class="text-blue-600 font-black text-base">${formatNum(j.BagsQty)} Bags</div>
                                 <div class="font-bold text-[11px] flex flex-wrap items-center mt-0.5">
@@ -1138,18 +1797,22 @@
                                     ${j.Color ? `<span class="dot-separator text-slate-500">${j.Color}</span>` : ''}
                                 </div>
                                 <div class="printing-label"><i class="fa-solid fa-print"></i> <span>${printingLabels[j.Printing] || 'Plain'}</span></div>
-                                ${j.Instructions ? `<div class="instruction-text"><i class="fa-solid fa-circle-exclamation mt-0.5"></i><span>${j.Instructions}</span></div>` : ''}
+                                ${instText ? `<div class="instruction-text"><i class="fa-solid fa-circle-exclamation mt-0.5"></i><span>${instText}</span></div>` : ''}
                                 <div class="mt-3 flex flex-col gap-1">${scheduleHtml}</div>
                             </div>
                         </div>
-                        <div class="flex flex-col gap-2">
-                            ${renderFeatures.prod ? `<button onclick="openProd('${j.ID}')" class="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center shadow-lg"><i class="fa-solid fa-plus"></i></button>` : ''}
-                            ${renderFeatures.todo ? `<button onclick="openSchedule('${j.ID}')" class="w-10 h-10 bg-slate-900 text-white rounded-xl flex items-center justify-center"><i class="fa-solid fa-list-check"></i></button>` : ''}
-                            ${renderFeatures.edit ? `
-                                <button onclick="openEdit('${j.ID}')" class="w-10 h-8 bg-slate-100 text-slate-400 rounded-lg flex items-center justify-center"><i class="fa-solid fa-pen"></i></button>
-                                <button onclick="confirmDelete('${j.ID}')" class="w-10 h-8 bg-red-50 text-red-500 rounded-lg flex items-center justify-center"><i class="fa-solid fa-trash"></i></button>
-                            ` : ''}
+                        ${(hasActions && !isSelectionMode) ? `
+                        <div class="flex flex-col items-end gap-2 relative z-10">
+                            <button onclick="event.stopPropagation(); toggleActions('${j.ID}')" class="w-8 h-8 flex items-center justify-center text-slate-400 hover:bg-slate-100 rounded-full transition-colors">
+                                <i id="chevron-${j.ID}" class="fa-solid fa-chevron-down transition-transform duration-300"></i>
+                            </button>
+                            <div id="actions-${j.ID}" class="hidden flex-col gap-2 transition-all">
+                                ${renderFeatures.prod ? `<button onclick="event.stopPropagation(); openProd('${j.ID}')" class="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center shadow-lg hover:bg-blue-700 transition-colors"><i class="fa-solid fa-plus"></i></button>` : ''}
+                                ${renderFeatures.todo ? `<button onclick="event.stopPropagation(); openSchedule('${j.ID}')" class="w-10 h-10 bg-slate-900 text-white rounded-xl flex items-center justify-center shadow-lg hover:bg-slate-800 transition-colors"><i class="fa-solid fa-list-check"></i></button>` : ''}
+                                ${renderFeatures.edit ? `<button onclick="event.stopPropagation(); openEdit('${j.ID}')" class="w-10 h-8 bg-slate-100 text-slate-400 rounded-lg flex items-center justify-center hover:bg-slate-200 transition-colors"><i class="fa-solid fa-pen"></i></button><button onclick="event.stopPropagation(); confirmDelete('${j.ID}')" class="w-10 h-8 bg-red-50 text-red-500 rounded-lg flex items-center justify-center hover:bg-red-100 transition-colors"><i class="fa-solid fa-trash"></i></button>` : ''}
+                            </div>
                         </div>
+                        ` : ''}
                     </div>
                     <div class="mt-5 pt-4 border-t border-slate-100">
                         <div class="flex justify-between items-end mb-2">
@@ -1157,141 +1820,119 @@
                                 ${(j.Stock && Number(j.Stock) > 0) ? `<span class="stock-label"><i class="fa-solid fa-boxes-stacked"></i> Stock: ${formatNum(j.Stock)} Mtrs</span>` : ''}
                                 <span class="text-[9px] font-black text-slate-400 uppercase mt-0.5 flex items-center gap-1"><i class="fa-solid fa-gear spin-icon"></i> Production Progress</span>
                             </div>
-                            <div class="flex flex-col items-end">
-                                <span class="text-sm font-black text-blue-600">${pct}%</span>
-                            </div>
+                            <div class="flex flex-col items-end"><span class="text-sm font-black text-blue-600">${pct}%</span></div>
                         </div>
-                        <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                            <div class="h-full ${isComplete ? 'bg-emerald-500' : 'bg-blue-600'}" style="width: ${pct}%"></div>
-                        </div>
+                        <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden shadow-inner"><div class="h-full ${isComplete ? 'bg-emerald-500' : 'bg-blue-600'}" style="width: ${pct}%"></div></div>
                         <div class="flex justify-between mt-1 items-center">
                             <span class="text-[10px] font-bold text-slate-500">${formatNum(Math.floor(done))} / ${formatNum(req)} Mtrs</span>
                             <span class="remaining-badge">Remaining : <span class="text-red-700">${formatNum(Math.floor(remainingMtrs))}</span> Mtrs</span>
                         </div>
                     </div>`;
-                
                 list.appendChild(card);
             });
             updatePendingBadge();
+            renderActivity(); 
+            renderDashboard(); 
         }
 
-        // Fixed Refresh Icon Pending Badge Logic
         function updatePendingBadge() {
             const count = jobs.filter(j => j.ID !== 'SYSTEM_SETTINGS_V1' && !calculateJobStatus(j).isComplete).length;
             const b = document.getElementById('pending-badge');
-            if (b) {
-                if (count > 0) { 
-                    b.innerText = count; 
-                    b.classList.remove('hidden'); 
-                } else { 
-                    b.classList.add('hidden'); 
-                }
-            }
+            if (b) { if (count > 0) { b.innerText = count; b.classList.remove('hidden'); } else { b.classList.add('hidden'); } }
         }
 
-        async function silentPullData() {
-            try { 
-                const r = await fetch(API); 
-                const d = await r.json(); 
-                if (Array.isArray(d)) { 
-                    jobs = d; 
-                    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(jobs)); 
-                } 
-            } catch(e) {}
-        }
+        async function silentPullData() { try { const r = await fetch(API); const d = await r.json(); if (Array.isArray(d)) { jobs = d; localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(jobs)); } } catch(e) {} }
 
         async function pullData() {
             const icon = document.getElementById('sync-icon'); if (icon) icon.classList.add('sync-anim');
-            try { 
-                const r = await fetch(API); 
-                const d = await r.json(); 
-                if (Array.isArray(d)) { 
-                    jobs = d; 
-                    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(jobs)); 
-                    updateLocalPermissions(); 
-                    renderJobs(); 
-                } 
-            } catch(e) { 
-                console.error("Sync Error", e); 
-            }
+            try { const r = await fetch(API); const d = await r.json(); if (Array.isArray(d)) { jobs = d; localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(jobs)); updateLocalPermissions(); renderJobs(); } } catch(e) { console.error("Sync Error", e); }
             if (icon) icon.classList.remove('sync-anim');
         }
 
         async function syncData(action, jobData) {
-            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(jobs)); 
-            renderJobs();
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(jobs)); renderJobs();
             try {
-                const params = new URLSearchParams();
-                params.append('action', action);
-                params.append('id', jobData.ID);
-                params.append('data', JSON.stringify(jobData));
-                return fetch(API, { 
-                    method: 'POST', 
-                    mode: 'no-cors', 
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: params.toString()
-                });
-            } catch (err) {
-                console.error("Cloud sync failed:", err);
-            }
+                const params = new URLSearchParams(); params.append('action', action); params.append('id', jobData.ID); params.append('data', JSON.stringify(jobData));
+                return fetch(API, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: params.toString() });
+            } catch (err) {}
         }
 
         function openNewJob() {
-            document.getElementById('edit-id').value = ''; 
-            document.getElementById('job-form').reset();
+            document.getElementById('edit-id').value = ''; document.getElementById('job-form').reset();
             document.getElementById('form-title').innerText = "New Job Order";
+            document.getElementById('job-date').value = new Date().toISOString().split('T')[0];
+            
+            document.getElementById('job-image-input').value = '';
+            document.getElementById('job-artwork-input').value = '';
+
             currentJobImageData = ""; currentJobArtworkData = "";
-            document.getElementById('view-sheet-btn').classList.add('hidden'); 
-            document.getElementById('view-artwork-btn').classList.add('hidden');
+            document.getElementById('view-sheet-btn').classList.add('hidden'); document.getElementById('extract-sheet-btn').classList.add('hidden'); document.getElementById('view-artwork-btn').classList.add('hidden');
+            
+            // hide warning
+            document.getElementById('job-no-warning').classList.add('hidden');
+            document.getElementById('save-main-btn').disabled = false;
+            document.getElementById('save-main-btn').classList.remove('opacity-50', 'cursor-not-allowed');
+            
             document.getElementById('modal-form').style.display = 'flex';
         }
 
         function openEdit(id) {
-            const j = jobs.find(x => x.ID == id);
-            document.getElementById('edit-id').value = id;
-            document.getElementById('job-no').value = j.JobNo; 
-            document.getElementById('customer').value = j.Customer;
-            document.getElementById('bags').value = j.BagsQty; 
-            document.getElementById('stock').value = j.Stock || '';
-            document.getElementById('cut').value = j.CutLength; 
-            document.getElementById('size').value = j.Size || '';
-            document.getElementById('gsm').value = j.GSM || ''; 
-            document.getElementById('color').value = j.Color || '';
+            const j = jobs.find(x => x.ID == id); document.getElementById('edit-id').value = id;
+            
+            const details = parseJobDetails(j);
+            document.getElementById('job-date').value = details.date;
+            document.getElementById('instructions').value = details.text;
+
+            document.getElementById('job-no').value = j.JobNo; document.getElementById('customer').value = j.Customer;
+            document.getElementById('bags').value = j.BagsQty; document.getElementById('stock').value = j.Stock || '';
+            document.getElementById('cut').value = j.CutLength; document.getElementById('size').value = j.Size || '';
+            document.getElementById('gsm').value = j.GSM || ''; document.getElementById('color').value = j.Color || '';
             document.getElementById('printing').value = j.Printing || 'plain'; 
-            document.getElementById('instructions').value = j.Instructions || '';
-            currentJobImageData = j.ImageData || ""; 
-            currentJobArtworkData = j.ArtworkData || "";
+            
+            document.getElementById('job-image-input').value = '';
+            document.getElementById('job-artwork-input').value = '';
+
+            currentJobImageData = (j.ImageData && j.ImageData !== '[]') ? j.ImageData : ""; 
+            currentJobArtworkData = (j.ArtworkData && j.ArtworkData !== '[]') ? j.ArtworkData : "";
+            
             document.getElementById('view-sheet-btn').classList.toggle('hidden', !currentJobImageData);
+            document.getElementById('extract-sheet-btn').classList.toggle('hidden', !currentJobImageData);
             document.getElementById('view-artwork-btn').classList.toggle('hidden', !currentJobArtworkData);
+            
+            // hide warning initially
+            document.getElementById('job-no-warning').classList.add('hidden');
+            document.getElementById('save-main-btn').disabled = false;
+            document.getElementById('save-main-btn').classList.remove('opacity-50', 'cursor-not-allowed');
+
             document.getElementById('modal-form').style.display = 'flex';
         }
 
         async function saveJob(event) {
-            event.preventDefault();
-            const btn = document.getElementById('save-main-btn');
-            const label = document.getElementById('save-btn-label');
-            const spinner = document.getElementById('save-spinner');
+            event.preventDefault(); 
+            if (checkJobNo()) {
+                showActionToast("Duplicate Job No. cannot be saved!", true);
+                return;
+            }
+            
+            const btn = document.getElementById('save-main-btn'); const label = document.getElementById('save-btn-label'); const spinner = document.getElementById('save-spinner');
             btn.disabled = true; spinner.classList.remove('hidden'); label.innerText = "UPLOADING...";
             const id = document.getElementById('edit-id').value || Date.now().toString();
             let j = jobs.find(x => x.ID == id);
-            if (!j) { 
-                j = { ID: id, ProductionLogs: '[]', Schedule: '[]' }; 
-                jobs.unshift(j); 
-            }
-            j.JobNo = document.getElementById('job-no').value; 
-            j.Customer = document.getElementById('customer').value;
-            j.BagsQty = document.getElementById('bags').value; 
-            j.Stock = document.getElementById('stock').value;
-            j.CutLength = document.getElementById('cut').value; 
-            j.Size = document.getElementById('size').value;
-            j.GSM = document.getElementById('gsm').value; 
-            j.Color = document.getElementById('color').value;
-            j.Printing = document.getElementById('printing').value; 
-            j.Instructions = document.getElementById('instructions').value;
-            j.ImageData = currentJobImageData; 
-            j.ArtworkData = currentJobArtworkData;
-            await syncData('save', j); 
-            closeModals();
+            if (!j) { j = { ID: id, ProductionLogs: '[]', Schedule: '[]' }; jobs.unshift(j); }
+            
+            const dateVal = document.getElementById('job-date').value;
+            const instVal = document.getElementById('instructions').value;
+            
+            j.Instructions = dateVal ? (instVal + '_@_DATE_@_' + dateVal) : instVal;
+            
+            j.JobNo = document.getElementById('job-no').value; j.Customer = document.getElementById('customer').value;
+            j.BagsQty = document.getElementById('bags').value; j.Stock = document.getElementById('stock').value;
+            j.CutLength = document.getElementById('cut').value; j.Size = document.getElementById('size').value;
+            j.GSM = document.getElementById('gsm').value; j.Color = document.getElementById('color').value;
+            j.Printing = document.getElementById('printing').value;
+            j.ImageData = currentJobImageData; j.ArtworkData = currentJobArtworkData;
+            
+            await syncData('save', j); closeModals();
             btn.disabled = false; spinner.classList.add('hidden'); label.innerText = "SAVE JOB";
         }
 
@@ -1299,112 +1940,257 @@
             document.getElementById('modal-delete').style.display = 'flex';
             document.getElementById('confirm-delete-btn').onclick = () => {
                 const card = document.getElementById(`job-card-${id}`);
-                if(card) {
-                    const overlay = document.createElement('div');
-                    overlay.className = 'deleting-overlay';
-                    overlay.innerHTML = '<i class="fa-solid fa-spinner sync-anim text-red-600 text-2xl"></i>';
-                    card.appendChild(overlay);
-                }
-                const jDel = jobs.find(x => x.ID == id);
-                jobs = jobs.filter(x => x.ID != id);
-                syncData('delete', { ID: id });
-                closeModals();
+                if(card) { const overlay = document.createElement('div'); overlay.className = 'deleting-overlay rounded-2xl'; overlay.innerHTML = '<i class="fa-solid fa-spinner sync-anim text-red-600 text-3xl"></i>'; card.appendChild(overlay); }
+                jobs = jobs.filter(x => x.ID != id); syncData('delete', { ID: id }); closeModals();
                 setTimeout(() => renderJobs(), 500);
             };
         }
 
-        function openProd(id) { 
-            activeId = id; 
-            const j = jobs.find(x => x.ID == id); 
-            document.getElementById('prod-job-info').innerText = `Job #${j.JobNo}`; 
-            renderProdLogs(); 
-            document.getElementById('modal-prod').style.display = 'flex'; 
+        function renderDashboard() {
+            const dashContent = document.getElementById('dashboard-content');
+            if(!dashContent) return;
+
+            let totalActive = 0, totalCompleted = 0, totalBags = 0, totalMetersReq = 0, totalMetersDone = 0;
+
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+            let recentJobsList = [];
+
+            jobs.forEach(j => {
+                if(j.ID === 'SYSTEM_SETTINGS_V1') return;
+                
+                const details = parseJobDetails(j);
+                if (details.date && new Date(details.date) >= thirtyDaysAgo) {
+                    recentJobsList.push(j);
+                }
+
+                const status = calculateJobStatus(j);
+                if(status.isComplete) totalCompleted++; else totalActive++;
+                totalBags += (parseFloat(j.BagsQty) || 0);
+                totalMetersReq += status.req;
+                totalMetersDone += status.done;
+            });
+
+            const overallProgress = totalMetersReq > 0 ? Math.min(100, Math.floor((totalMetersDone / totalMetersReq) * 100)) : 0;
+            
+            // Generate Recent 30 Days HTML
+            let recentHTML = '';
+            if (recentJobsList.length > 0) {
+                // Sort by newest first
+                recentJobsList.sort((a,b) => new Date(parseJobDetails(b).date) - new Date(parseJobDetails(a).date));
+                
+                recentHTML = `
+                    <div class="mt-8 mb-3">
+                        <h4 class="font-black text-slate-800 text-lg flex items-center gap-2"><i class="fa-regular fa-clock text-blue-500"></i> Past 30 Days Orders</h4>
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Summary of recent jobs</p>
+                    </div>
+                    <div class="space-y-3">
+                        ${recentJobsList.map(rj => {
+                            const rd = parseJobDetails(rj).date;
+                            const rStat = calculateJobStatus(rj);
+                            return `
+                            <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-[0_2px_8px_rgba(0,0,0,0.02)] flex justify-between items-center" onclick="switchTab('tab-home', document.querySelector('.nav-item:nth-child(1)')); setTimeout(() => { document.getElementById('search').value='${rj.JobNo}'; renderJobs(); }, 100);">
+                                <div>
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="text-[9px] font-black bg-slate-900 text-white px-2 py-0.5 rounded shadow-sm"># ${rj.JobNo}</span>
+                                        <span class="text-[9px] font-bold text-slate-500">${new Date(rd).toLocaleDateString('en-GB', {day:'2-digit', month:'short'})}</span>
+                                    </div>
+                                    <h5 class="text-sm font-black text-slate-800 uppercase max-w-[150px] truncate leading-tight">${rj.Customer}</h5>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-xs font-black text-blue-600">${formatNum(rj.BagsQty)} Bags</span>
+                                    <div class="mt-1 ${rStat.isComplete ? 'text-emerald-500' : 'text-amber-500'} text-[9px] font-black uppercase tracking-widest">${rStat.isComplete ? 'Complete' : rStat.pct + '% Done'}</div>
+                                </div>
+                            </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+            } else {
+                recentHTML = `
+                    <div class="mt-8 mb-3">
+                        <h4 class="font-black text-slate-800 text-lg flex items-center gap-2"><i class="fa-regular fa-clock text-blue-500"></i> Past 30 Days Orders</h4>
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Summary of recent jobs</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-3xl border border-dashed border-slate-200 text-center text-slate-400">
+                        <i class="fa-solid fa-folder-open text-2xl mb-2"></i>
+                        <p class="text-xs font-bold">No orders found in the last 30 days.</p>
+                    </div>
+                `;
+            }
+
+            dashContent.innerHTML = `
+                <div class="grid grid-cols-2 gap-3 mb-4">
+                    <div class="bg-white p-5 rounded-3xl border border-slate-100 shadow-[0_4px_12px_rgba(0,0,0,0.03)] flex flex-col justify-between">
+                        <div class="w-12 h-12 bg-gradient-to-br from-blue-50 to-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mb-4 text-xl shadow-inner border border-blue-100"><i class="fa-solid fa-spinner"></i></div>
+                        <div>
+                            <h3 class="text-3xl font-black text-slate-800 tracking-tight">${totalActive}</h3>
+                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Active Jobs</p>
+                        </div>
+                    </div>
+                    <div class="bg-white p-5 rounded-3xl border border-slate-100 shadow-[0_4px_12px_rgba(0,0,0,0.03)] flex flex-col justify-between">
+                        <div class="w-12 h-12 bg-gradient-to-br from-emerald-50 to-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mb-4 text-xl shadow-inner border border-emerald-100"><i class="fa-solid fa-check-double"></i></div>
+                        <div>
+                            <h3 class="text-3xl font-black text-slate-800 tracking-tight">${totalCompleted}</h3>
+                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Completed</p>
+                        </div>
+                    </div>
+                    <div class="bg-white p-5 rounded-3xl border border-slate-100 shadow-[0_4px_12px_rgba(0,0,0,0.03)] flex flex-col justify-between">
+                        <div class="w-12 h-12 bg-gradient-to-br from-purple-50 to-purple-100 text-purple-600 rounded-2xl flex items-center justify-center mb-4 text-xl shadow-inner border border-purple-100"><i class="fa-solid fa-bag-shopping"></i></div>
+                        <div>
+                            <h3 class="text-xl font-black text-slate-800 tracking-tight">${formatNum(totalBags)}</h3>
+                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Total Bags</p>
+                        </div>
+                    </div>
+                    <!-- CHANGED TO REQUIRED METERS -->
+                    <div class="bg-white p-5 rounded-3xl border border-slate-100 shadow-[0_4px_12px_rgba(0,0,0,0.03)] flex flex-col justify-between">
+                        <div class="w-12 h-12 bg-gradient-to-br from-orange-50 to-orange-100 text-orange-600 rounded-2xl flex items-center justify-center mb-4 text-xl shadow-inner border border-orange-100"><i class="fa-solid fa-bullseye"></i></div>
+                        <div>
+                            <h3 class="text-xl font-black text-slate-800 tracking-tight">${formatNum(Math.floor(totalMetersReq))} <span class="text-sm">M</span></h3>
+                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Req. Meters</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-[0_4px_12px_rgba(0,0,0,0.03)] mb-4">
+                    <div class="flex justify-between items-end mb-4">
+                        <div>
+                            <h4 class="font-black text-slate-800 text-lg">Overall Progress</h4>
+                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Analytics of Active & Completed Jobs</p>
+                        </div>
+                        <div class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">${overallProgress}%</div>
+                    </div>
+                    <div class="w-full bg-slate-100 h-4 rounded-full overflow-hidden mb-3 shadow-inner">
+                        <div class="h-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full shadow-[0_0_10px_rgba(79,70,229,0.5)]" style="width: ${overallProgress}%"></div>
+                    </div>
+                    <div class="flex justify-between text-xs font-black uppercase tracking-widest text-slate-400 mt-2">
+                        <span>Done: <span class="text-emerald-600">${formatNum(Math.floor(totalMetersDone))} M</span></span>
+                        <span>Target: <span class="text-slate-800">${formatNum(Math.floor(totalMetersReq))} M</span></span>
+                    </div>
+                </div>
+                
+                ${recentHTML}
+            `;
         }
+
+        function renderActivity() {
+            const activityList = document.getElementById('activity-list');
+            if (!activityList) return;
+            
+            const activeJobs = jobs.filter(j => {
+                if (j.ID === 'SYSTEM_SETTINGS_V1') return false;
+                const status = calculateJobStatus(j);
+                return status.pct > 0 && !status.isComplete;
+            });
+
+            if (activeJobs.length === 0) {
+                activityList.innerHTML = `
+                    <div class="home-card text-center text-slate-500 mt-4 border-dashed border-2 bg-transparent shadow-none">
+                        <div class="w-16 h-16 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-3 text-3xl"><i class="ph ph-coffee"></i></div>
+                        <p class="font-bold text-sm text-slate-600">No active production right now.</p>
+                        <p class="text-[10px] font-bold text-slate-400 mt-2 uppercase tracking-widest">Jobs in progress will appear here live</p>
+                    </div>
+                `;
+                return;
+            }
+
+            activeJobs.sort((a, b) => calculateJobStatus(b).pct - calculateJobStatus(a).pct);
+
+            activityList.innerHTML = activeJobs.map(j => {
+                const { done, req, pct } = calculateJobStatus(j);
+                const remainingMtrs = Math.max(0, req - done);
+                return `
+                    <div class="bg-white p-5 rounded-3xl border border-slate-100 shadow-[0_4px_12px_rgba(0,0,0,0.02)] relative overflow-hidden active:scale-95 transition-all cursor-pointer hover:border-blue-200" onclick="switchTab('tab-home', document.querySelector('.nav-item:nth-child(1)')); setTimeout(() => { const card = document.getElementById('job-card-${j.ID}'); if(card) { card.scrollIntoView({behavior: 'smooth', block: 'center'}); card.classList.add('ring-4', 'ring-blue-300', 'transition-all', 'duration-500'); setTimeout(()=>card.classList.remove('ring-4', 'ring-blue-300'), 1500); } }, 100);">
+                        <div class="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-blue-400 to-indigo-600"></div>
+                        <div class="flex justify-between items-start mb-3 pl-2">
+                            <div class="flex-1 pr-3">
+                                <div class="flex items-center gap-2 mb-1.5">
+                                    <span class="text-[9px] font-black bg-slate-900 text-white px-2 py-0.5 rounded uppercase shadow-sm"># ${j.JobNo}</span>
+                                </div>
+                                <h3 class="text-sm font-black text-slate-800 uppercase leading-tight break-words">${j.Customer}</h3>
+                            </div>
+                            <span class="text-lg font-black text-blue-600">${pct}%</span>
+                        </div>
+                        <div class="pl-2 mt-2">
+                            <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden mb-2.5 shadow-inner">
+                                <div class="h-full bg-blue-600 rounded-full shadow-[0_0_8px_rgba(37,99,235,0.4)]" style="width: ${pct}%"></div>
+                            </div>
+                            <div class="flex justify-between items-center text-[10px] font-black tracking-widest uppercase">
+                                <span class="text-slate-500">${formatNum(Math.floor(done))} / ${formatNum(req)} Mtrs</span>
+                                <span class="text-red-500 bg-red-50 px-2 py-0.5 rounded border border-red-100">Rem: ${formatNum(Math.floor(remainingMtrs))} M</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function openProd(id) { activeId = id; const j = jobs.find(x => x.ID == id); document.getElementById('prod-job-info').innerText = `Order #${j.JobNo}`; renderProdLogs(); document.getElementById('modal-prod').style.display = 'flex'; }
         
         function renderProdLogs() {
-            const j = jobs.find(x => x.ID == activeId); 
-            const list = document.getElementById('prod-history-list');
-            let logs = [];
+            const j = jobs.find(x => x.ID == activeId); const list = document.getElementById('prod-history-list'); let logs = [];
             try { logs = typeof j.ProductionLogs === 'string' ? JSON.parse(j.ProductionLogs) : (j.ProductionLogs || []); } catch(e) { logs = []; }
             const total = logs.reduce((s, l) => s + parseFloat(l.meters || 0), 0);
             document.getElementById('prod-total-display').innerText = `Total: ${formatNum(total)} Mtrs`;
             list.innerHTML = logs.map((l, i) => `
                 <div class="prod-log-item">
-                    <div><p class="text-xs font-bold">${l.date}</p><p class="text-[10px] text-blue-600">${l.meters} Mtrs</p></div>
-                    <button onclick="deleteLog(${i})" class="text-red-400 p-2"><i class="fa-solid fa-trash"></i></button>
-                </div>`).join('');
+                    <div>
+                        <p class="text-xs font-black text-slate-800">${l.date}</p>
+                        <p class="text-[10px] font-bold text-slate-500 mt-0.5 flex items-center gap-1.5"><i class="fa-solid fa-user-pen text-slate-300"></i> ${l.user || 'Unknown'}</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="text-sm text-blue-600 font-black bg-blue-50 px-3 py-1.5 rounded-xl border border-blue-100">${formatNum(l.meters)} <span class="text-[10px]">M</span></span>
+                        <button onclick="deleteLog(${i})" class="w-8 h-8 flex items-center justify-center bg-red-50 text-red-500 rounded-full hover:bg-red-500 hover:text-white transition-colors active:scale-90"><i class="fa-solid fa-trash text-xs"></i></button>
+                    </div>
+                </div>
+            `).join('');
         }
         
         async function saveProduction() {
-            const m = document.getElementById('mtr-val').value;
-            const d = document.getElementById('mtr-date').value; 
-            if (!m || !d) return;
-            const btn = document.getElementById('prod-upload-btn');
-            btn.disabled = true; document.getElementById('prod-spinner').classList.remove('hidden');
-            const j = jobs.find(x => x.ID == activeId); 
-            let logs = [];
+            const m = document.getElementById('mtr-val').value; const d = document.getElementById('mtr-date').value; if (!m || !d) return;
+            const btn = document.getElementById('prod-upload-btn'); btn.disabled = true; document.getElementById('prod-spinner').classList.remove('hidden');
+            const j = jobs.find(x => x.ID == activeId); let logs = [];
             try { logs = typeof j.ProductionLogs === 'string' ? JSON.parse(j.ProductionLogs) : (j.ProductionLogs || []); } catch(e) {}
-            logs.push({ meters: m, date: d }); 
-            j.ProductionLogs = JSON.stringify(logs); 
-            await syncData('save', j); 
-            btn.disabled = false; document.getElementById('prod-spinner').classList.add('hidden');
-            document.getElementById('mtr-val').value = '';
-            renderProdLogs(); 
+            
+            const addedBy = getCurrentUserDisplayName();
+            logs.push({ meters: m, date: d, user: addedBy }); 
+            
+            j.ProductionLogs = JSON.stringify(logs); await syncData('save', j); 
+            btn.disabled = false; document.getElementById('prod-spinner').classList.add('hidden'); document.getElementById('mtr-val').value = ''; renderProdLogs(); 
         }
         
         async function deleteLog(i) { 
-            const j = jobs.find(x => x.ID == activeId); 
-            let logs = [];
+            const j = jobs.find(x => x.ID == activeId); let logs = [];
             try { logs = typeof j.ProductionLogs === 'string' ? JSON.parse(j.ProductionLogs) : (j.ProductionLogs || []); } catch(e) {}
-            logs.splice(i, 1); 
-            j.ProductionLogs = JSON.stringify(logs); 
-            renderProdLogs(); 
-            await syncData('save', j); 
+            logs.splice(i, 1); j.ProductionLogs = JSON.stringify(logs); renderProdLogs(); await syncData('save', j); 
         }
         
-        function openSchedule(id) { 
-            activeId = id; 
-            const j = jobs.find(x => x.ID == id); 
-            document.getElementById('schedule-job-no').innerText = `Job #${j.JobNo}`; 
-            resetScheduleForm();
-            renderSch(); 
-            document.getElementById('modal-schedule').style.display = 'flex'; 
-        }
+        function openSchedule(id) { activeId = id; const j = jobs.find(x => x.ID == id); document.getElementById('schedule-job-no').innerText = `Order #${j.JobNo}`; resetScheduleForm(); renderSch(); document.getElementById('modal-schedule').style.display = 'flex'; }
         
-        function resetScheduleForm() {
-            document.getElementById('sch-edit-index').value = "-1";
-            document.getElementById('sch-date').value = "";
-            document.getElementById('sch-qty').value = "";
-            document.getElementById('sch-note').value = "";
-            document.getElementById('sch-btn-label').innerText = "ADD TO SCHEDULE";
-        }
+        function resetScheduleForm() { document.getElementById('sch-edit-index').value = "-1"; document.getElementById('sch-date').value = ""; document.getElementById('sch-qty').value = ""; document.getElementById('sch-note').value = ""; document.getElementById('sch-btn-label').innerText = "ADD TO SCHEDULE"; }
 
         function renderSch() {
-            const j = jobs.find(x => x.ID == activeId); 
-            let items = [];
+            const j = jobs.find(x => x.ID == activeId); let items = [];
             try { items = typeof j.Schedule === 'string' ? JSON.parse(j.Schedule) : (j.Schedule || []); } catch(e) {}
             document.getElementById('schedule-list').innerHTML = items.map((s, i) => {
-                const displayDate = s.date ? new Date(s.date).toLocaleDateString('en-GB', {day:'2-digit', month:'short', year:'numeric'}) : '';
+                const displayDate = s.date ? new Date(s.date).toLocaleDateString('en-GB', {day:'2-digit', month:'short', year:'numeric'}) : 'ASAP';
                 return `
-                <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 shadow-sm">
-                    <div class="flex justify-between items-start">
-                        <div class="${s.done ? 'opacity-40 line-through' : ''} flex-1">
-                            ${displayDate ? `<p class="text-xs font-black text-slate-800">${displayDate}</p>` : ''}
-                            <p class="text-sm font-black text-blue-600">${s.qty ? formatNum(s.qty) + ' Bags' : 'No Qty'}</p>
-                            ${s.note ? `<p class="text-[10px] font-bold text-slate-500 mt-1 leading-tight">${s.note}</p>` : ''}
-                        </div>
-                        <div class="flex flex-col gap-2 ml-4">
-                            <div class="flex gap-1">
-                                <button onclick="editSch(${i})" class="w-8 h-8 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center transition-colors">
-                                    <i class="fa-solid fa-pen-to-square text-xs"></i>
-                                </button>
-                                <button onclick="toggleSch(${i})" class="w-8 h-8 rounded-xl ${s.done ? 'bg-emerald-500 text-white' : 'bg-white border-2 border-slate-200 text-slate-400'} flex items-center justify-center transition-colors">
-                                    <i class="fa-solid fa-check"></i>
-                                </button>
+                <div class="timeline-item">
+                    <div class="timeline-dot ${s.done ? 'done' : ''}"></div>
+                    <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-[0_2px_8px_rgba(0,0,0,0.02)] ${s.done ? 'opacity-60' : ''} transition-opacity">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1 pr-2">
+                                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 ${s.done ? 'line-through' : ''}">${displayDate}</p>
+                                <p class="text-sm font-black ${s.done ? 'text-emerald-600 line-through' : 'text-slate-800'}">${s.qty ? formatNum(s.qty) + ' Bags' : 'No Qty Limit'}</p>
+                                ${s.note ? `<p class="text-xs font-bold text-slate-500 mt-1.5 bg-slate-50 p-2 rounded-lg border border-slate-100 ${s.done ? 'line-through' : ''}">${s.note}</p>` : ''}
                             </div>
-                            <button onclick="delSch(${i})" class="w-full h-8 rounded-xl bg-red-50 text-red-400 flex items-center justify-center">
-                                <i class="fa-solid fa-trash text-xs"></i>
-                            </button>
+                            <div class="flex flex-col gap-2">
+                                <div class="flex gap-2">
+                                    <button onclick="editSch(${i})" class="w-8 h-8 rounded-full bg-slate-50 text-slate-400 hover:bg-slate-200 hover:text-slate-600 flex items-center justify-center transition-colors shadow-sm border border-slate-200"><i class="fa-solid fa-pen text-[10px]"></i></button>
+                                    <button onclick="toggleSch(${i})" class="w-8 h-8 rounded-full ${s.done ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/30' : 'bg-white border-2 border-slate-200 text-slate-400 hover:border-emerald-400 hover:text-emerald-500'} flex items-center justify-center transition-all"><i class="fa-solid fa-check text-xs"></i></button>
+                                </div>
+                                <button onclick="delSch(${i})" class="w-full h-8 rounded-full bg-red-50 text-red-500 hover:bg-red-500 hover:text-white flex items-center justify-center transition-colors"><i class="fa-solid fa-trash text-xs"></i></button>
+                            </div>
                         </div>
                     </div>
                 </div>`;
@@ -1412,77 +2198,72 @@
         }
         
         async function addScheduleItem() { 
-            const d = document.getElementById('sch-date').value;
-            const q = document.getElementById('sch-qty').value;
-            const n = document.getElementById('sch-note').value;
-            const editIndex = parseInt(document.getElementById('sch-edit-index').value);
-            
+            const d = document.getElementById('sch-date').value; const q = document.getElementById('sch-qty').value; const n = document.getElementById('sch-note').value; const editIndex = parseInt(document.getElementById('sch-edit-index').value);
             if(!d && !q && !n) return; 
-
-            const btn = document.getElementById('sch-upload-btn');
-            btn.disabled = true; document.getElementById('sch-spinner').classList.remove('hidden');
-
-            const j = jobs.find(x => x.ID == activeId); 
-            let items = [];
+            const btn = document.getElementById('sch-upload-btn'); btn.disabled = true; document.getElementById('sch-spinner').classList.remove('hidden');
+            const j = jobs.find(x => x.ID == activeId); let items = [];
             try { items = typeof j.Schedule === 'string' ? JSON.parse(j.Schedule) : (j.Schedule || []); } catch(e) {}
-            
             const newItem = { date: d, qty: q, note: n, done: editIndex > -1 ? items[editIndex].done : false };
-
-            if(editIndex > -1) {
-                items[editIndex] = newItem;
-            } else {
-                items.push(newItem);
-            }
+            if(editIndex > -1) items[editIndex] = newItem; else items.push(newItem);
             
-            j.Schedule = JSON.stringify(items); 
-            await syncData('save', j); 
-
-            btn.disabled = false; document.getElementById('sch-spinner').classList.add('hidden');
-            resetScheduleForm();
-            renderSch(); 
+            // sort by date asc
+            items.sort((a,b) => {
+               if(!a.date) return 1; if(!b.date) return -1;
+               return new Date(a.date) - new Date(b.date);
+            });
+            
+            j.Schedule = JSON.stringify(items); await syncData('save', j); 
+            btn.disabled = false; document.getElementById('sch-spinner').classList.add('hidden'); resetScheduleForm(); renderSch(); 
         }
         
         function editSch(i) {
-            const j = jobs.find(x => x.ID == activeId); 
-            let items = [];
-            try { items = typeof j.Schedule === 'string' ? JSON.parse(j.Schedule) : (j.Schedule || []); } catch(e) {}
-            const item = items[i];
-            
-            document.getElementById('sch-edit-index').value = i;
-            document.getElementById('sch-date').value = item.date || "";
-            document.getElementById('sch-qty').value = item.qty || "";
-            document.getElementById('sch-note').value = item.note || "";
-            document.getElementById('sch-btn-label').innerText = "UPDATE SCHEDULE";
-            document.getElementById('sch-date').focus();
+            const j = jobs.find(x => x.ID == activeId); let items = []; try { items = typeof j.Schedule === 'string' ? JSON.parse(j.Schedule) : (j.Schedule || []); } catch(e) {}
+            const item = items[i]; document.getElementById('sch-edit-index').value = i; document.getElementById('sch-date').value = item.date || ""; document.getElementById('sch-qty').value = item.qty || ""; document.getElementById('sch-note').value = item.note || ""; document.getElementById('sch-btn-label').innerText = "UPDATE SCHEDULE"; document.getElementById('sch-date').focus();
         }
 
-        async function toggleSch(i) { 
-            const j = jobs.find(x => x.ID == activeId); 
-            let items = [];
-            try { items = typeof j.Schedule === 'string' ? JSON.parse(j.Schedule) : (j.Schedule || []); } catch(e) {}
-            items[i].done = !items[i].done; 
-            j.Schedule = JSON.stringify(items); 
-            renderSch(); 
-            await syncData('save', j); 
-        }
+        async function toggleSch(i) { const j = jobs.find(x => x.ID == activeId); let items = []; try { items = typeof j.Schedule === 'string' ? JSON.parse(j.Schedule) : (j.Schedule || []); } catch(e) {} items[i].done = !items[i].done; j.Schedule = JSON.stringify(items); renderSch(); await syncData('save', j); }
+        async function delSch(i) { const j = jobs.find(x => x.ID == activeId); let items = []; try { items = typeof j.Schedule === 'string' ? JSON.parse(j.Schedule) : (j.Schedule || []); } catch(e) {} items.splice(i, 1); j.Schedule = JSON.stringify(items); renderSch(); await syncData('save', j); }
         
-        async function delSch(i) { 
-            const j = jobs.find(x => x.ID == activeId); 
-            let items = [];
-            try { items = typeof j.Schedule === 'string' ? JSON.parse(j.Schedule) : (j.Schedule || []); } catch(e) {}
-            items.splice(i, 1); 
-            j.Schedule = JSON.stringify(items); 
-            renderSch(); 
-            await syncData('save', j); 
-        }
-        
-        function closeModals() { 
-            document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); 
-            activeId = null; 
-            editingUserId = null;
+        function closeModals() { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); activeId = null; editingUserId = null; }
+
+        function exportDataToCSV() {
+            const isAdmin = localStorage.getItem('userRole') === 'admin';
+            if (!isAdmin && !unlockedFeatures.export) { 
+                showActionToast("Export not allowed!", true); 
+                return; 
+            }
+
+            let jobsToExport = jobs.filter(j => j.ID !== 'SYSTEM_SETTINGS_V1');
+            
+            if (isSelectionMode && selectedJobs.size > 0) {
+                jobsToExport = jobsToExport.filter(j => selectedJobs.has(String(j.ID)));
+            }
+
+            if (jobsToExport.length === 0) { 
+                showActionToast("No jobs available to export!", true); 
+                return; 
+            }
+            
+            let csvContent = "data:text/csv;charset=utf-8,Date,Job No,Customer,Bags Qty,Stock (M),Cut Length (cm),Size,GSM,Color,Printing,Status,Progress (%),Remaining (Mtrs)\n";
+            jobsToExport.forEach(j => {
+                const details = parseJobDetails(j);
+                const { done, req, pct, isComplete } = calculateJobStatus(j); const remainingMtrs = Math.max(0, req - done); const status = isComplete ? "COMPLETE" : "PENDING";
+                const escapeCSV = (text) => `"${(text || '').toString().replace(/"/g, '""')}"`;
+                const row = [ escapeCSV(details.date), escapeCSV(j.JobNo), escapeCSV(j.Customer), j.BagsQty || 0, j.Stock || 0, j.CutLength || 0, escapeCSV(j.Size), escapeCSV(j.GSM), escapeCSV(j.Color), escapeCSV(j.Printing), status, pct, remainingMtrs ];
+                csvContent += row.join(",") + "\n";
+            });
+            const encodedUri = encodeURI(csvContent); const link = document.createElement("a"); link.setAttribute("href", encodedUri); link.setAttribute("download", `JobMaster_Data_Export_${new Date().toISOString().split('T')[0]}.csv`); document.body.appendChild(link); link.click(); document.body.removeChild(link);
+            
+            showActionToast("Data Exported to CSV Successfully!");
+            toggleMenu(); 
+            
+            if (isSelectionMode) {
+                exitSelectionMode();
+            }
         }
     </script>
 </body>
 </html>
+
 
 
